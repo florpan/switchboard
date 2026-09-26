@@ -6,6 +6,9 @@ See the quick start in the [README](../README.md). The workspace's SessionStart 
 (log in `workspace/state/gateway.log`) unless one already answers on `GATEWAY_URL`. You can also run it
 yourself with `bun start` from the repo root.
 
+On Windows, start `claude` from a normal (not elevated) terminal: an elevated session did not connect to
+the channels in testing, without any error in `/mcp`.
+
 ## Allowlisting the channel plugins
 
 Channels are a Claude Code research preview. `--channels` only accepts plugins on an allowlist, which
