@@ -4,3 +4,5 @@ inbox/
 .claude/settings.local.json
 node_modules/
 tools.yaml
+images/
+downloads/
