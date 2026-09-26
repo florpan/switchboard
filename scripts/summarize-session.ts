@@ -1,4 +1,4 @@
-// Summarize a finished session transcript into the daily notes (<notes dir>/YYYY-MM-DD.md).
+// Summarize a finished session transcript into the daily notes (<notes dir>/daily/YYYY/MM/DD.md).
 // Started by the SessionEnd hook; runs claude -p outside the workspace so no gateway hooks fire.
 //   bun scripts/summarize-session.ts <transcript.jsonl> [notes dir]
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
@@ -60,6 +60,7 @@ const notes = (await new Response(proc.stdout).text()).trim()
 if ((await proc.exited) !== 0 || !notes) process.exit(1)
 
 const time = (iso: string) => (iso ? new Date(iso).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '?')
-const day = new Date(first || Date.now()).toLocaleDateString('sv-SE')
-mkdirSync(notesDir, { recursive: true })
-appendFileSync(resolve(notesDir, `${day}.md`), `\n## Session ${time(first)}–${time(last)}\n\n${notes}\n`)
+const [year, month, day] = new Date(first || Date.now()).toLocaleDateString('sv-SE').split('-') // local YYYY-MM-DD
+const dir = resolve(notesDir, 'daily', year!, month!)
+mkdirSync(dir, { recursive: true })
+appendFileSync(resolve(dir, `${day}.md`), `\n## Session ${time(first)}–${time(last)}\n\n${notes}\n`)

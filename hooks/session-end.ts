@@ -1,5 +1,5 @@
 // SessionEnd: hand the transcript to a detached summarizer that appends to the workspace's
-// notes/YYYY-MM-DD.md. SessionEnd hooks block Claude Code (max 60 s), so this only starts the job.
+// notes/daily/YYYY/MM/DD.md. SessionEnd hooks block Claude Code (max 60 s), so this only starts the job.
 import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
 

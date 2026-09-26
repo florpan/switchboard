@@ -11,7 +11,7 @@ workspace/
 │   ├── settings.json       enabled plugins, permissions, hooks (point to ../hooks)
 │   └── skills/             your own skills
 ├── config/                 users.json, jobs.json, home.json, voice-devices.json      (committed)
-├── notes/                  daily notes, written from the transcript at session end   (committed)
+├── notes/                  notes; daily/YYYY/MM/DD.md written from the transcript     (committed)
 ├── state/                  runtime state of scripts, gateway.log                    (ignored)
 ├── inbox/                  files that arrived on channels                           (ignored)
 └── .env                    secrets and settings                                     (ignored)
@@ -29,7 +29,7 @@ workspace/
 
 The session is meant to be cleared regularly rather than compacted: long contexts are slow and costly
 when most of every turn is uncached. When a session ends (exit or `/clear`), the SessionEnd hook
-summarizes its transcript into `notes/YYYY-MM-DD.md`. The session reads notes when it needs to recall
+summarizes its transcript into `notes/daily/YYYY/MM/DD.md`. The session reads notes when it needs to recall
 earlier days; lasting facts belong in `CLAUDE.md` or `config/`.
 
 ## Skills

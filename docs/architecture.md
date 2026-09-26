@@ -32,7 +32,7 @@ ships the generic Home skill.
   `prompts/gateway.md`, which Claude Code adds to the context. The gateway's own instructions therefore
   never live in the owner's `CLAUDE.md`.
 - `SessionEnd`: starts `scripts/summarize-session.ts` detached; it summarizes the finished transcript
-  with `claude -p --model haiku` into `notes/YYYY-MM-DD.md`.
+  with `claude -p --model haiku` into `notes/daily/YYYY/MM/DD.md`.
 
 ## A message's path
 
