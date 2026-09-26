@@ -45,8 +45,24 @@ claude --remote-control "gateway" --dangerously-load-development-channels \
 ```
 
 Confirm the development-channels dialog. The session's start hook launches the daemon and adds the
-gateway instructions to the context. Leave out channels you don't use. To skip the dialog, allowlist
-the plugins once: see [docs/deploy.md](docs/deploy.md#allowlisting-the-channel-plugins).
+gateway instructions to the context. Leave out channels you don't use.
+
+### Without the development-channels dialog
+
+Claude Code only accepts channel plugins from an allowlist, which by default holds Anthropic's own; that is
+why the quick start uses `--dangerously-load-development-channels` and gets a confirmation dialog at every
+start. Allowlist this repo's plugins once and use `--channels` instead:
+
+```sh
+# as admin; Linux/WSL path shown, macOS/Windows paths in docs/deploy.md
+cp deploy/managed-settings.json /etc/claude-code/managed-settings.json
+
+cd workspace
+claude --remote-control "gateway" --channels \
+  plugin:voice@switchboard plugin:jobs@switchboard plugin:discord@switchboard plugin:email@switchboard
+```
+
+The Docker image has this built in. Details: [docs/deploy.md](docs/deploy.md#allowlisting-the-channel-plugins).
 
 Then: say something to a speaker, message the Discord bot, or `curl -X POST localhost:8090/voice/ask
 -H 'content-type: application/json' -d '{"text":"what time is it?"}'`.

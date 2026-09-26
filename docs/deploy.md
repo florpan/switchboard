@@ -92,6 +92,11 @@ Claude Code needs a claude.ai login: Remote Control does not work with API keys 
 Start with an empty home and log in once, rather than copying a home that another running Claude Code
 also uses (they would invalidate each other's refreshed tokens).
 
+**Keep these out of the container environment:** `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` take
+precedence over the login and can't start Remote Control, and `DISABLE_TELEMETRY`, `DO_NOT_TRACK`,
+`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` switch off the feature flags Remote Control depends on. The session
+then runs, and channels work, but it never appears in the app. `GATEWAY_NAME` sets the name it appears under.
+
 ```sh
 docker exec -it <container> tmux attach -t gateway
 ```
