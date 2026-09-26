@@ -65,8 +65,10 @@ docker exec -it gateway tmux attach -t gateway    # /login, accept the folder-tr
                                                   # dialogs; detach with Ctrl-b d
 ```
 
-The answers are stored in the mounted home, so this is one-time. The same attach shows what the session
-is doing at any time; Remote Control shows it too.
+The answers are stored in the mounted home, so this is one-time. Folder trust is saved per path, so it
+is asked again only if the workspace mount point changes. Until the dialogs are answered no channel
+connects; the entrypoint then prints the waiting screen to `docker logs` after three minutes. The same
+attach shows what the session is doing at any time; Remote Control shows it too.
 
 ### Updating
 

@@ -45,4 +45,16 @@ tmux new-session -d -s gateway -x 220 -y 50 -c "$WS" \
   "while true; do claude --remote-control '$NAME' --channels$channel_args ${CLAUDE_ARGS:-}; echo 'claude exited, restarting in 5s'; sleep 5; done"
 echo "claude started in tmux session 'gateway' (docker exec -it <container> tmux attach -t gateway)"
 
+# First start (new home or workspace path): Claude Code waits on one-time dialogs (login, folder trust,
+# permission mode) and no channel connects. Say so in the logs instead of failing silently.
+(
+  for _ in $(seq 90); do
+    curl -fs http://127.0.0.1:8090/health | grep -q ':true' && exit 0
+    sleep 2
+  done
+  echo "No Claude session connected after 3 min; it is probably waiting on a first-start dialog:"
+  tmux capture-pane -pt gateway | grep -v '^\s*$' | tail -15
+  echo "Answer it once: docker exec -it <container> tmux attach -t gateway   (detach: Ctrl-b d)"
+) &
+
 wait "$DAEMON"
