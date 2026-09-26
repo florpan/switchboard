@@ -15,7 +15,7 @@ settings file replaces that allowlist:
 
 ```json
 { "channelsEnabled": true,
-  "allowedChannelPlugins": [ { "marketplace": "session-gateway", "plugin": "voice" }, ... ] }
+  "allowedChannelPlugins": [ { "marketplace": "switchboard", "plugin": "voice" }, ... ] }
 ```
 
 `deploy/managed-settings.json` lists all channel plugins. Copy it (admin rights) to:
@@ -26,7 +26,7 @@ settings file replaces that allowlist:
 | macOS | `/Library/Application Support/ClaudeCode/managed-settings.json` |
 | Windows | `C:\Program Files\ClaudeCode\managed-settings.json` |
 
-Then start with `--channels plugin:voice@session-gateway ...` and no dialog appears. The file applies to
+Then start with `--channels plugin:voice@switchboard ...` and no dialog appears. The file applies to
 every Claude Code session on the machine, but only decides which channel plugins may register. If you
 also use Anthropic's channel plugins (Telegram, Discord), add them to the list.
 
@@ -40,7 +40,7 @@ The image contains the product, Bun, Claude Code, tmux and the managed settings.
 | `/home/gateway` | Claude Code's home: login, `.claude.json`, user settings; git/ssh credentials for backups |
 
 ```sh
-docker build -t session-gateway .
+docker build -t switchboard .
 docker compose -f deploy/docker-compose.yml up -d     # adjust image and paths first
 ```
 

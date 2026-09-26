@@ -1,6 +1,6 @@
 {
   "owner": {
-    "name": "christer"
+    "name": "florpan"
   },
   "plugins": [
     {
@@ -29,5 +29,5 @@
       "description": "Home skill: Home Assistant through a curated registry"
     }
   ],
-  "name": "session-gateway"
+  "name": "switchboard"
 }

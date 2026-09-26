@@ -1,7 +1,7 @@
 # Example deployment. Everything personal is in the workspace (your repo); secrets in workspace/.env.
 services:
   gateway:
-    image: registry.example.com/session-gateway:latest   # or build: ..
+    image: registry.example.com/switchboard:latest   # or build: ..
     container_name: gateway
     restart: unless-stopped
     ports:

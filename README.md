@@ -1,12 +1,23 @@
-# session-gateway
+# switchboard
 
-Turn a regular Claude Code session into an always-on assistant that people reach by voice, Discord, email
-and scheduled jobs, and that you can still pick up from your phone with Remote Control.
+A minimal, do-it-yourself personal assistant built on Claude Code. It connects voice speakers, Discord,
+email and scheduled jobs to one long-running Claude Code session, which you can also use directly from
+your phone with Remote Control.
 
-There is no custom agent loop. The session is plain `claude`, running in a folder you own (the
-*workspace*). A small daemon connects the outside world to it through Claude Code
-[channels](https://code.claude.com/docs/en/channels-reference): MCP servers that push events into a
-running session. Everything else is standard Claude Code: skills, hooks, `CLAUDE.md`, MCP servers.
+It is meant as a small base to build on, in the same space as OpenClaw or Hermes but with far less of
+its own: no agent framework, no custom agent loop. The session is plain `claude`, running in a folder you
+own (the *workspace*), and uses only standard Claude Code features: [channels](https://code.claude.com/docs/en/channels-reference)
+to receive messages, skills and MCP servers to act, hooks and `CLAUDE.md` for behaviour. A small daemon
+(a few hundred lines per channel) does the plumbing, so you can read what runs and change it.
+
+What you get:
+
+- **Channels**: voice (ESP32 speakers, ElevenLabs speech), Discord, email (Resend), and jobs (cron, one-off
+  and webhook triggers with shell steps that decide whether the model is needed at all).
+- **A workspace that is yours**: persona, people, jobs, skills and notes live in your own git repo, apart
+  from this code. The session keeps daily notes and can maintain its own configuration.
+- **A Home Assistant skill** that puts named devices, groups and house rules in front of HA.
+- **A Docker image** that runs the daemon and the session with two mounts.
 
 ```
 ESP32 speakers ──ws /voice───────┐
@@ -23,14 +34,14 @@ Requirements: [Bun](https://bun.sh), Claude Code signed in with a claude.ai acco
 not work with API keys).
 
 ```sh
-git clone <this repo> session-gateway && cd session-gateway
+git clone <this repo> switchboard && cd switchboard
 bun install
 cp -r workspace.example workspace && cd workspace && git init   # your workspace: its own repo
 cp .env.example .env                                            # keys for the channels you use
 claude plugin marketplace add ..                                # the plugins live in this repo
 
 claude --remote-control "gateway" --dangerously-load-development-channels \
-  plugin:voice@session-gateway plugin:jobs@session-gateway plugin:discord@session-gateway plugin:email@session-gateway
+  plugin:voice@switchboard plugin:jobs@switchboard plugin:discord@switchboard plugin:email@switchboard
 ```
 
 Confirm the development-channels dialog. The session's start hook launches the daemon and adds the

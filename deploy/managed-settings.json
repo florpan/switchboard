@@ -2,19 +2,19 @@
   "allowedChannelPlugins": [
     {
       "plugin": "voice",
-      "marketplace": "session-gateway"
+      "marketplace": "switchboard"
     },
     {
       "plugin": "jobs",
-      "marketplace": "session-gateway"
+      "marketplace": "switchboard"
     },
     {
       "plugin": "discord",
-      "marketplace": "session-gateway"
+      "marketplace": "switchboard"
     },
     {
       "plugin": "email",
-      "marketplace": "session-gateway"
+      "marketplace": "switchboard"
     }
   ],
   "channelsEnabled": true

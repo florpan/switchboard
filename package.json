@@ -1,5 +1,5 @@
 {
-  "name": "session-gateway",
+  "name": "switchboard",
   "type": "module",
   "private": true,
   "scripts": {

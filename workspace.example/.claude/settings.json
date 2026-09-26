@@ -1,10 +1,10 @@
 {
   "enabledPlugins": {
-    "voice@session-gateway": true,
-    "jobs@session-gateway": true,
-    "discord@session-gateway": true,
-    "email@session-gateway": true,
-    "home@session-gateway": true
+    "voice@switchboard": true,
+    "jobs@switchboard": true,
+    "discord@switchboard": true,
+    "email@switchboard": true,
+    "home@switchboard": true
   },
   "permissions": {
     "allow": [

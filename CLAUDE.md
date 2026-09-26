@@ -1,4 +1,4 @@
-# session-gateway: notes for agents working on this repo
+# switchboard: notes for agents working on this repo
 
 This repo is the product: a daemon that connects voice, Discord, email and jobs to a regular Claude Code
 session through channels. Read [docs/architecture.md](docs/architecture.md) first; the other docs cover
@@ -42,4 +42,4 @@ Adding a channel: folder in `src/channels/`, register it in `src/main.ts`, plugi
 `deploy/managed-settings.json`, enable it in `workspace.example/.claude/settings.json`, document it in
 `docs/channels.md`.
 
-Docker: `docker build -t session-gateway .`; see [docs/deploy.md](docs/deploy.md).
+Docker: `docker build -t switchboard .`; see [docs/deploy.md](docs/deploy.md).

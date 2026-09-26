@@ -15,10 +15,10 @@ mkdir -p "$WS/state" "$WS/inbox"
 git config --global --add safe.directory "$WS"
 
 # Plugins come from the image's marketplace. User scope, so the workspace repo isn't rewritten.
-claude plugin marketplace add /app >/dev/null 2>&1 || claude plugin marketplace update session-gateway >/dev/null 2>&1
+claude plugin marketplace add /app >/dev/null 2>&1 || claude plugin marketplace update switchboard >/dev/null 2>&1
 for plugin in $(bun -e "
   const s = await Bun.file('$WS/.claude/settings.json').json();
-  console.log(Object.keys(s.enabledPlugins ?? {}).filter(p => p.endsWith('@session-gateway')).join(' '))"); do
+  console.log(Object.keys(s.enabledPlugins ?? {}).filter(p => p.endsWith('@switchboard')).join(' '))"); do
   claude plugin install "$plugin" --scope user >/dev/null 2>&1 || true
 done
 
@@ -40,7 +40,7 @@ for _ in $(seq 60); do curl -fs http://127.0.0.1:8090/health >/dev/null && break
 
 # Claude Code, interactive with Remote Control, restarted when it exits.
 channel_args=""
-for c in ${CHANNELS//,/ }; do channel_args+=" plugin:$c@session-gateway"; done
+for c in ${CHANNELS//,/ }; do channel_args+=" plugin:$c@switchboard"; done
 tmux new-session -d -s gateway -x 220 -y 50 -c "$WS" \
   "while true; do claude --remote-control '$NAME' --channels$channel_args ${CLAUDE_ARGS:-}; echo 'claude exited, restarting in 5s'; sleep 5; done"
 echo "claude started in tmux session 'gateway' (docker exec -it <container> tmux attach -t gateway)"

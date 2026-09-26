@@ -1,5 +1,5 @@
 // Gateway daemon. Runs on its own; a Claude Code session in the workspace connects to the channels it
-// opted into with --channels plugin:<channel>@session-gateway.
+// opted into with --channels plugin:<channel>@switchboard.
 import { resolve } from 'node:path'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import type { Channel, Gateway } from './core/channel'

@@ -24,7 +24,7 @@ connected.
 
 **Plugins** (`plugins/`, marketplace in `.claude-plugin/marketplace.json`). Each channel is a plugin
 that only contains the URL of its MCP endpoint (`${GATEWAY_URL:-http://127.0.0.1:8090}/mcp/<name>`), so a
-session opts into channels one by one with `--channels plugin:<name>@session-gateway`. The `home` plugin
+session opts into channels one by one with `--channels plugin:<name>@switchboard`. The `home` plugin
 ships the generic Home skill.
 
 **Hooks** (`hooks/`, wired in the workspace's `.claude/settings.json`).

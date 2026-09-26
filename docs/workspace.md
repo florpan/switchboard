@@ -38,7 +38,7 @@ Skills are how the session acts: a `SKILL.md` and scripts it runs. Prefer skills
 MCP servers: only the description sits in context until a skill is used, and the same scripts can be
 called from job steps. A `package.json` in a skill folder is installed at container start.
 
-- **Home** (plugin `home@session-gateway`): Home Assistant through a curated registry in
+- **Home** (plugin `home@switchboard`): Home Assistant through a curated registry in
   `config/home.json`: devices with spoken names and aliases, groups (of devices, groups or areas), and
   house rules. `bun <skill>/home.ts state|do|find|unmapped|import|add|rename|alias|group|rules`, one line per
   device. `import` seeds the registry from Home Assistant areas; the session keeps it tidy as people use
