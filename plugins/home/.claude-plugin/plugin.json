@@ -1,0 +1,5 @@
+{
+  "name": "home",
+  "description": "Home skill: Home Assistant through a curated registry of named devices, groups and house rules.",
+  "version": "0.1.0"
+}
