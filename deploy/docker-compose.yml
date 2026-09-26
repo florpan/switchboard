@@ -1,0 +1,16 @@
+# Example deployment. Everything personal is in the workspace (your repo); secrets in workspace/.env.
+services:
+  gateway:
+    image: registry.example.com/session-gateway:latest   # or build: ..
+    container_name: gateway
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - TZ=Europe/Stockholm
+      # - GATEWAY_CHANNELS=voice,jobs,discord,email
+      # Unattended session: skip permission prompts (the container is the sandbox).
+      - CLAUDE_ARGS=--dangerously-skip-permissions
+    volumes:
+      - ./workspace:/app/workspace      # your workspace repo: CLAUDE.md, config/, skills, notes, .env
+      - ./home:/home/gateway            # Claude Code login + settings, git/ssh credentials
