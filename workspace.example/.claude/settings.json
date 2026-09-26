@@ -1,0 +1,30 @@
+{
+  "enabledPlugins": {
+    "voice@session-gateway": true,
+    "jobs@session-gateway": true,
+    "discord@session-gateway": true,
+    "email@session-gateway": true,
+    "home@session-gateway": true
+  },
+  "permissions": {
+    "allow": [
+      "mcp__plugin_voice_voice",
+      "mcp__plugin_jobs_jobs",
+      "mcp__plugin_discord_discord",
+      "mcp__plugin_email_email"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear",
+        "hooks": [{ "type": "command", "command": "bun \"${CLAUDE_PROJECT_DIR}/../hooks/session-start.ts\"", "timeout": 30 }]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [{ "type": "command", "command": "bun \"${CLAUDE_PROJECT_DIR}/../hooks/session-end.ts\"", "timeout": 10 }]
+      }
+    ]
+  }
+}

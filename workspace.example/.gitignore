@@ -1,0 +1,6 @@
+.env
+state/
+inbox/
+.claude/settings.local.json
+node_modules/
+tools.yaml

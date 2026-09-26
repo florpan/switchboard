@@ -1,0 +1,5 @@
+{
+  "users": [
+    { "name": "Alex", "aliases": { "discord": ["123456789012345678"], "email": ["alex@example.com"] }, "contact": { "email": "alex@example.com" } }
+  ]
+}
