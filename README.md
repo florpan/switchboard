@@ -61,3 +61,7 @@ Then: say something to a speaker, message the Discord bot, or `curl -X POST loca
 | [docs/workspace.md](docs/workspace.md) | Your workspace: CLAUDE.md, config, skills, notes, secrets, backups |
 | [docs/deploy.md](docs/deploy.md) | Running locally, allowlisting, the Docker image |
 | [CLAUDE.md](CLAUDE.md) | For agents working on this repo |
+
+## License
+
+MIT
