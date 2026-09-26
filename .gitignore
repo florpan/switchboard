@@ -1,0 +1,8 @@
+node_modules/
+# the owner's workspace is its own (private) repo
+workspace/
+# test output
+replies/
+*.log
+.DS_Store
+tools.yaml
