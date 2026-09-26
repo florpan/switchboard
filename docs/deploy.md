@@ -56,22 +56,60 @@ The entrypoint:
 
 Container settings: `GATEWAY_CHANNELS` (voice,jobs,discord,email), `GATEWAY_NAME` (Remote Control session
 name, gateway), `CLAUDE_ARGS` (extra flags, e.g. `--dangerously-skip-permissions` so an unattended session
-never waits on a prompt; the container is the sandbox), `TZ`. Everything else goes in the workspace `.env`.
+never waits on a prompt; the container is the sandbox), `TZ`. Other settings can go in the compose
+`environment` or in the workspace `.env`; the process environment wins over `.env`.
+
+### Preparing the host
+
+The container runs as uid **1001**, a user that normally doesn't exist on the host. Both mounted folders
+must belong to it (ssh also refuses keys owned by someone else):
+
+```sh
+mkdir -p /srv/switchboard/home/.ssh
+git clone <your workspace repo> /srv/switchboard/workspace     # or copy it there
+sudo chown -R 1001:1001 /srv/switchboard
+```
+
+Because the uid is unknown on the host, `sudo -u 1001 ...` doesn't work there. Run git and other workspace
+commands inside the container instead (`docker exec <container> git -C /app/workspace pull`), or as root
+followed by `chown -R 1001:1001` again.
+
+For backups the session pushes the workspace itself. Give it a key that can only reach that repo: create
+an SSH key in `home/.ssh/`, add its public key as a deploy key with write access on the workspace repo, and
+point `github.com` at it in `home/.ssh/config`:
+
+```
+Host github.com
+  IdentityFile ~/.ssh/<key>
+  IdentitiesOnly yes
+```
+
+plus `home/.ssh/known_hosts` (`ssh-keyscan github.com`) and a `[user]` name/email in `home/.gitconfig`.
 
 ### First start
 
-Claude Code needs a claude.ai login (Remote Control does not work with API keys or `setup-token`
-tokens). Either mount a home that already has one, or log in once:
+Claude Code needs a claude.ai login: Remote Control does not work with API keys or `setup-token` tokens.
+Start with an empty home and log in once, rather than copying a home that another running Claude Code
+also uses (they would invalidate each other's refreshed tokens).
 
 ```sh
-docker exec -it gateway tmux attach -t gateway    # /login, accept the folder-trust and permission
-                                                  # dialogs; detach with Ctrl-b d
+docker exec -it <container> tmux attach -t gateway
 ```
 
-The answers are stored in the mounted home, so this is one-time. Folder trust is saved per path, so it
-is asked again only if the workspace mount point changes. Until the dialogs are answered no channel
-connects; the entrypoint then prints the waiting screen to `docker logs` after three minutes. The same
-attach shows what the session is doing at any time; Remote Control shows it too.
+Then, in the session:
+1. `/login` and follow the link.
+2. Answer the one-time dialogs. **The default choice is "No" / "Exit", so use the arrow keys:**
+   - folder trust for `/app/workspace` → "Yes, I trust this folder",
+   - bypass permissions mode (with `--dangerously-skip-permissions`) → "Yes, I accept",
+   - the full-screen renderer question → either.
+3. Detach with **Ctrl-b d** (don't exit: claude keeps running in tmux).
+
+Within seconds `docker logs` shows `session connected` for each channel and the session appears in
+Remote Control. The answers are stored in the mounted home, so this happens once; folder trust is saved
+per path and is asked again only if the workspace mount point changes. Until the dialogs are answered no
+channel connects, and after three minutes the entrypoint prints the waiting screen to `docker logs`.
+
+The same attach shows what the session is doing at any time; Remote Control shows it too.
 
 ### Updating
 
