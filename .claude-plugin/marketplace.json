@@ -1,0 +1,33 @@
+{
+  "owner": {
+    "name": "christer"
+  },
+  "plugins": [
+    {
+      "source": "./plugins/voice",
+      "description": "Voice speakers (ESP32): speech in, spoken answers via the speak tool.",
+      "name": "voice"
+    },
+    {
+      "source": "./plugins/jobs",
+      "description": "Jobs: cron/at/webhook triggers, shell-step gates, prompts into the session.",
+      "name": "jobs"
+    },
+    {
+      "source": "./plugins/discord",
+      "description": "Discord bot: guild channels and DMs, replies via the reply tool.",
+      "name": "discord"
+    },
+    {
+      "source": "./plugins/email",
+      "description": "Email via Resend: inbound webhook, send_email tool.",
+      "name": "email"
+    },
+    {
+      "name": "home",
+      "source": "./plugins/home",
+      "description": "Home skill: Home Assistant through a curated registry"
+    }
+  ],
+  "name": "session-gateway"
+}

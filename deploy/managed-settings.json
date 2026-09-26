@@ -1,0 +1,21 @@
+{
+  "allowedChannelPlugins": [
+    {
+      "plugin": "voice",
+      "marketplace": "session-gateway"
+    },
+    {
+      "plugin": "jobs",
+      "marketplace": "session-gateway"
+    },
+    {
+      "plugin": "discord",
+      "marketplace": "session-gateway"
+    },
+    {
+      "plugin": "email",
+      "marketplace": "session-gateway"
+    }
+  ],
+  "channelsEnabled": true
+}

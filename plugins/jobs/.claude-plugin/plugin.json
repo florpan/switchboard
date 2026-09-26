@@ -1,0 +1,5 @@
+{
+  "version": "0.1.0",
+  "description": "Jobs: cron/at/webhook triggers, shell-step gates, prompts into the session.",
+  "name": "jobs"
+}

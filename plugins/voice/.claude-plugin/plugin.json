@@ -1,0 +1,5 @@
+{
+  "version": "0.1.0",
+  "description": "Voice speakers (ESP32): speech in, spoken answers via the speak tool.",
+  "name": "voice"
+}

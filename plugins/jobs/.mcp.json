@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "jobs": {
+      "type": "http",
+      "url": "${GATEWAY_URL:-http://127.0.0.1:8090}/mcp/jobs",
+      "headers": { "Authorization": "Bearer ${GATEWAY_TOKEN:-none}" }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "voice": {
+      "type": "http",
+      "url": "${GATEWAY_URL:-http://127.0.0.1:8090}/mcp/voice",
+      "headers": { "Authorization": "Bearer ${GATEWAY_TOKEN:-none}" }
+    }
+  }
+}
