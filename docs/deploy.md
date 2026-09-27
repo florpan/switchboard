@@ -165,3 +165,10 @@ setup; leave them off where others' conversations shouldn't be stored.
 A collector setup that works: OTLP receiver on 4317/4318; metrics through the `prometheus` exporter
 (`resource_to_telemetry_conversion: enabled`) scraped by Prometheus; logs to Loki's native OTLP endpoint
 (`http://loki:3100/otlp`, Loki 3 with schema v13); traces to Tempo over OTLP gRPC. Grafana reads all three.
+
+[deploy/grafana/claude-code.json](../deploy/grafana/claude-code.json) is a ready dashboard (Grafana 12; import
+it and pick the Loki, Prometheus and Tempo data sources): cost, prompts, sessions and tokens; cost by model and
+by source (main thread, subagents, background requests); tool calls with MCP tools named `server.tool`;
+subagents; the conversation (prompts and replies) and every tool call with its input; and the turns as traces.
+Usage numbers come from the `api_request` events (exact per request), not from the metric counters, which are
+split per session. Filter by `deployment` at the top.
