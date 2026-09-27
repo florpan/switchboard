@@ -5,17 +5,15 @@ image work and run in production for the first user. Open work in priority order
 
 ## Next
 
-1. **Usage metrics.** Claude Code's built-in OpenTelemetry (env vars only, nothing in this repo's code) sent to
-   an OpenTelemetry Collector, which forwards metrics to Prometheus, events to Loki and traces to Tempo; Grafana
-   on top. Enable prompts and tool details (`OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`) and the beta traces
-   (`CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`): only traces carry `agent_id`/`parent_agent_id`, which is what
-   shows which agent and subagent did what. Tag each source with `OTEL_RESOURCE_ATTRIBUTES`. Document the env
-   vars in docs/deploy.md once it works.
-2. **Dashboard (new, not a port of the old gateway UI).** Channel status, jobs (list, edit, run, run history),
-   users and their channel identities, session status, and live activity per agent and subagent from the
-   telemetry. Available API: `GET /health`, `/api/channels`, `/api/jobs`, `/api/runs`, `/api/voice/devices`,
-   `POST /api/jobs/:id/run`. Missing API: job create/update/delete over HTTP (the session has tools for it),
-   users read/write, session status (running? which dialog is it waiting on? tmux capture), daemon log tail.
+1. **Dashboard (new, not a port of the old gateway UI).** Channel status, jobs (list, edit, run, run history),
+   users and their channel identities, session status, and live activity per agent and subagent. Available API:
+   `GET /health`, `/api/channels`, `/api/jobs`, `/api/runs`, `/api/voice/devices`, `POST /api/jobs/:id/run`.
+   Missing API: job create/update/delete over HTTP (the session has tools for it), users read/write, session
+   status (running? which dialog is it waiting on? tmux capture), daemon log tail. Usage and activity come from
+   the OpenTelemetry data (docs/deploy.md): metrics in Prometheus, events in Loki, traces with agent ids in
+   Tempo. Decide whether the dashboard queries those stores or the daemon receives a copy from the collector.
+2. **Grafana usage dashboard** (quick win before the above): tokens and cost per deployment and model, sessions,
+   tool calls, and a trace view. Built on the same data.
 3. **Tests.** Only manual ones (`tests/fake-device.ts`, `/voice/ask`, job webhooks). A small smoke test that starts
    the daemon and exercises the jobs runner and routes would catch regressions.
 

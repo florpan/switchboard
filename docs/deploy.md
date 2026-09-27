@@ -126,3 +126,42 @@ The same attach shows what the session is doing at any time; Remote Control show
 Build and deploy a new image; the workspace and home are untouched. The session reconnects to the daemon
 by itself, and a restarted container starts both again. Bump `CLAUDE_CODE_VERSION` in the Dockerfile to
 update Claude Code.
+
+## Usage metrics and activity (OpenTelemetry)
+
+Claude Code exports its own telemetry; switchboard adds nothing to it. Point it at an OpenTelemetry
+Collector with environment variables in the compose `environment` (or the user settings' `env` for a
+session on your own machine):
+
+```yaml
+- CLAUDE_CODE_ENABLE_TELEMETRY=1
+- CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1        # traces: the only signal with agent/subagent ids
+- OTEL_METRICS_EXPORTER=otlp
+- OTEL_LOGS_EXPORTER=otlp
+- OTEL_TRACES_EXPORTER=otlp
+- OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+- OTEL_EXPORTER_OTLP_ENDPOINT=http://<collector>:4317
+- OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative   # what Prometheus expects
+- OTEL_LOG_USER_PROMPTS=1                      # prompt text in events and traces
+- OTEL_LOG_TOOL_DETAILS=1                      # tool input: commands, file paths, subagent type
+- OTEL_RESOURCE_ATTRIBUTES=host.name=<host>,deployment=switchboard
+```
+
+What arrives:
+
+- **Metrics**: `claude_code_token_usage_tokens_total` (by `type`, `model`), `claude_code_cost_usage_USD_total`,
+  `claude_code_session_count_total`, `claude_code_active_time_seconds_total`, plus lines/commits/PRs. Every
+  resource attribute becomes a label, so `deployment` separates this session from others.
+- **Events** (logs): `user_prompt`, `api_request`, `assistant_response`, `tool_decision`, `tool_result`,
+  `subagent_completed`, `hook_execution_*`, `mcp_server_connection`, each with `session_id`.
+- **Traces**: one `claude_code.interaction` per turn, with `claude_code.llm_request` (model, tokens, time to
+  first token) and `claude_code.tool` spans (tool name, command, file path, time blocked on permission). Spans
+  made by a subagent carry its `agent_id`, and `query_source_safe` names its type
+  (`agent.builtin.Explore`); the main thread is `repl_main_thread`.
+
+The two logging switches put prompts and commands in your telemetry store. That is the point for a personal
+setup; leave them off where others' conversations shouldn't be stored.
+
+A collector setup that works: OTLP receiver on 4317/4318; metrics through the `prometheus` exporter
+(`resource_to_telemetry_conversion: enabled`) scraped by Prometheus; logs to Loki's native OTLP endpoint
+(`http://loki:3100/otlp`, Loki 3 with schema v13); traces to Tempo over OTLP gRPC. Grafana reads all three.
