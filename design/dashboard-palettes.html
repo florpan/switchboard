@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en" data-theme="chiba" data-glow="on" data-scan="on" data-static="on">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>switchboard // dashboard palettes</title>
+<style>
+/* Three candidate themes. Only these custom properties differ; everything else is shared. */
+:root[data-theme="chiba"] {          /* Chiba City: cyan + magenta neon on blue-black */
+  --bg: #070a12; --bg-2: #0c1220; --panel: rgba(14, 22, 38, .72); --line: #1b2a44;
+  --text: #d6e2f0; --muted: #6b7f99; --dim: #34445c;
+  --primary: #00e5ff; --accent: #ff2bd6; --ok: #2dffb3; --warn: #ffb020; --bad: #ff3b5c;
+  --grid: rgba(0, 229, 255, .05);
+}
+:root[data-theme="ice"] {            /* Sprawl ICE: cold electric blue + ultraviolet */
+  --bg: #05060f; --bg-2: #0a0d1f; --panel: rgba(12, 16, 38, .74); --line: #1d2350;
+  --text: #dfe6ff; --muted: #7480b3; --dim: #333b6b;
+  --primary: #5ab4ff; --accent: #b15cff; --ok: #7df9ff; --warn: #ffd166; --bad: #ff4d6d;
+  --grid: rgba(90, 180, 255, .05);
+}
+:root[data-theme="deadchannel"] {    /* Dead channel: chrome greys, one sodium-amber accent, teal for OK */
+  --bg: #0a0a0c; --bg-2: #111115; --panel: rgba(22, 22, 27, .78); --line: #2a2a31;
+  --text: #e4e4e8; --muted: #85858f; --dim: #3c3c44;
+  --primary: #c8ccd4; --accent: #ff9f1c; --ok: #19e6c1; --warn: #ff9f1c; --bad: #ff4b3e;
+  --grid: rgba(200, 204, 212, .035);
+}
+
+:root {
+  --font: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, ui-monospace, monospace;
+  --glow-1: 0 0 6px; --glow-2: 0 0 18px;
+}
+:root[data-glow="off"] { --glow-1: 0 0 0; --glow-2: 0 0 0; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--bg);
+  color: var(--text); font: 13px/1.45 var(--font); letter-spacing: .02em;
+  transition: background-color .3s;
+}
+
+/* "The sky above the port was the color of television, tuned to a dead channel." */
+.static, .scan { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+.static { opacity: .07; mix-blend-mode: screen; animation: flicker 180ms steps(2) infinite; }
+.scan { background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px); }
+:root[data-static="off"] .static, :root[data-scan="off"] .scan { display: none; }
+@keyframes flicker { 0% { transform: translate(0,0) } 50% { transform: translate(-3%, 2%) } 100% { transform: translate(2%, -3%) } }
+
+header {
+  display: flex; align-items: center; gap: 18px; padding: 14px 22px;
+  border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg-2) 80%, transparent);
+  position: sticky; top: 0; z-index: 10; backdrop-filter: blur(6px);
+}
+.brand { font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--primary);
+  text-shadow: var(--glow-1) color-mix(in srgb, var(--primary) 70%, transparent), var(--glow-2) color-mix(in srgb, var(--primary) 35%, transparent); }
+.brand span { color: var(--accent); text-shadow: var(--glow-1) color-mix(in srgb, var(--accent) 70%, transparent); }
+.clock { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px; border: 1px solid var(--line); color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: .15em; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.controls button {
+  font: inherit; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; cursor: pointer;
+  background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 5px 10px;
+}
+.controls button[aria-pressed="true"] { color: var(--bg); background: var(--primary); border-color: var(--primary);
+  box-shadow: var(--glow-2) color-mix(in srgb, var(--primary) 45%, transparent); }
+.controls .sep { width: 1px; background: var(--line); margin: 0 4px; }
+
+main { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; padding: 22px; max-width: 1500px; margin: 0 auto; }
+
+/* Panel with corner brackets */
+.w { position: relative; background: var(--panel); border: 1px solid var(--line); padding: 14px 16px 16px; min-height: 120px; }
+.w::before, .w::after { content: ""; position: absolute; width: 12px; height: 12px; border: 1px solid var(--primary);
+  filter: drop-shadow(var(--glow-1) color-mix(in srgb, var(--primary) 80%, transparent)); }
+.w::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.w::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+.w h2 { margin: 0 0 12px; font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.w h2 em { font-style: normal; color: var(--dim); }
+.c3 { grid-column: span 3 } .c4 { grid-column: span 4 } .c5 { grid-column: span 5 } .c6 { grid-column: span 6 } .c7 { grid-column: span 7 } .c8 { grid-column: span 8 } .c12 { grid-column: span 12 }
+@media (max-width: 1100px) { .c3, .c4, .c5 { grid-column: span 6 } .c6, .c7, .c8 { grid-column: span 12 } }
+
+/* stat */
+.stat .v { font-size: 38px; font-weight: 700; line-height: 1.1; color: var(--text); font-variant-numeric: tabular-nums;
+  text-shadow: var(--glow-2) color-mix(in srgb, var(--primary) 30%, transparent); }
+.stat .v.accent { color: var(--accent); text-shadow: var(--glow-2) color-mix(in srgb, var(--accent) 40%, transparent); }
+.stat .sub { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.stat .sub b { color: var(--ok); font-weight: 500; }
+
+/* status dots */
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ok { background: var(--ok); box-shadow: var(--glow-1) var(--ok), var(--glow-2) color-mix(in srgb, var(--ok) 50%, transparent); animation: pulse 2.4s ease-in-out infinite; }
+.dot.warn { background: var(--warn); box-shadow: var(--glow-1) var(--warn); }
+.dot.bad { background: var(--bad); box-shadow: var(--glow-1) var(--bad), var(--glow-2) color-mix(in srgb, var(--bad) 50%, transparent); }
+.dot.off { background: var(--dim); }
+@keyframes pulse { 50% { opacity: .55 } }
+
+.channels { display: grid; gap: 8px; }
+.ch { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 50%, transparent); }
+.ch .name { text-transform: uppercase; letter-spacing: .16em; }
+.ch .meta { color: var(--muted); font-size: 12px; }
+
+/* table-ish list */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 500; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); padding: 0 8px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px dashed color-mix(in srgb, var(--line) 70%, transparent); white-space: nowrap; }
+td.muted { color: var(--muted); }
+tr:hover td { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+.tag { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; padding: 2px 7px; border: 1px solid; }
+.tag.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, transparent); }
+.tag.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, transparent); text-shadow: var(--glow-1) color-mix(in srgb, var(--bad) 60%, transparent); }
+.tag.skip { color: var(--muted); border-color: var(--line); }
+
+/* feed */
+.feed { display: grid; gap: 2px; max-height: 300px; overflow: hidden; mask-image: linear-gradient(#000 75%, transparent); }
+.feed div { display: grid; grid-template-columns: 70px 92px 1fr; gap: 10px; padding: 4px 0; }
+.feed .t { color: var(--dim); font-variant-numeric: tabular-nums; }
+.feed .src { color: var(--primary); text-transform: uppercase; font-size: 11px; letter-spacing: .12em; }
+.feed .src.a { color: var(--accent); }
+.feed .msg { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed .msg i { color: var(--muted); font-style: normal; }
+.cursor::after { content: "▍"; color: var(--primary); animation: blink 1s steps(1) infinite; text-shadow: var(--glow-1) var(--primary); }
+@keyframes blink { 50% { opacity: 0 } }
+
+/* gauge + sparkline */
+.gauge { display: flex; align-items: center; gap: 18px; }
+.gauge svg { width: 132px; height: 132px; flex: none; }
+.gauge .track { stroke: var(--line); }
+.gauge .arc { stroke: var(--primary); filter: drop-shadow(var(--glow-1) var(--primary)); stroke-linecap: butt; }
+.gauge .num { fill: var(--text); font: 700 26px var(--font); }
+.gauge .unit { fill: var(--muted); font: 11px var(--font); letter-spacing: .15em; }
+.gauge dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 4px 14px; color: var(--muted); font-size: 12px; }
+.gauge dd { margin: 0; color: var(--text); text-align: right; }
+.spark svg { width: 100%; height: 70px; display: block; }
+.spark .l1 { stroke: var(--primary); fill: none; stroke-width: 1.6; filter: drop-shadow(var(--glow-1) var(--primary)); }
+.spark .a1 { fill: url(#fill1); }
+.spark .l2 { stroke: var(--accent); fill: none; stroke-width: 1.2; stroke-dasharray: 3 3; }
+.legend { display: flex; gap: 16px; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+.bars { display: grid; gap: 7px; }
+.bar { display: grid; grid-template-columns: 170px 1fr 56px; align-items: center; gap: 10px; font-size: 12px; }
+.bar .n { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .track { height: 6px; background: color-mix(in srgb, var(--line) 70%, transparent); position: relative; }
+.bar .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--primary), var(--accent)); box-shadow: var(--glow-1) color-mix(in srgb, var(--primary) 60%, transparent); }
+.bar .val { text-align: right; font-variant-numeric: tabular-nums; }
+
+.md p { margin: 0 0 8px; color: var(--muted); } .md strong { color: var(--text); } .md code { color: var(--accent); }
+.err { border-color: color-mix(in srgb, var(--bad) 60%, transparent); }
+.err::before, .err::after { border-color: var(--bad); }
+.err h2 { color: var(--bad); }
+.err pre { margin: 0; color: var(--muted); white-space: pre-wrap; font: 12px var(--font); }
+footer { text-align: center; color: var(--dim); font-size: 11px; letter-spacing: .2em; padding: 8px 0 26px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<svg class="static" width="100%" height="100%" aria-hidden="true">
+  <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+  <rect width="140%" height="140%" filter="url(#noise)"/>
+</svg>
+<div class="scan" aria-hidden="true"></div>
+
+<header>
+  <div class="brand">switchboard <span>//</span> jarvis</div>
+  <div class="pill"><span class="dot ok"></span>session live</div>
+  <div class="controls" role="group" aria-label="theme">
+    <button data-set="theme" data-val="chiba">Chiba</button>
+    <button data-set="theme" data-val="ice">Sprawl ICE</button>
+    <button data-set="theme" data-val="deadchannel">Dead channel</button>
+    <span class="sep"></span>
+    <button data-set="glow" data-val="toggle">Glow</button>
+    <button data-set="scan" data-val="toggle">Scanlines</button>
+    <button data-set="static" data-val="toggle">Static</button>
+  </div>
+  <div class="clock" id="clock">--:--:--</div>
+</header>
+
+<main>
+  <section class="w stat c3"><h2>Cost today <em>loki</em></h2><div class="v">$1.31</div><div class="sub">opus $1.27 · haiku $0.03</div></section>
+  <section class="w stat c3"><h2>Prompts <em>loki</em></h2><div class="v">27</div><div class="sub">voice 9 · discord 6 · jobs 12</div></section>
+  <section class="w stat c3"><h2>Jobs ok <em>runs</em></h2><div class="v">14<span style="color:var(--dim)">/15</span></div><div class="sub"><b>▲</b> last failure 03:00</div></section>
+  <section class="w stat c3"><h2>Doorbell <em>script</em></h2><div class="v accent">2</div><div class="sub">unknown visitors today</div></section>
+
+  <section class="w c4"><h2>Channels <em>channels</em></h2>
+    <div class="channels">
+      <div class="ch"><span class="dot ok"></span><span class="name">voice</span><span class="meta">3 devices · 4 min ago</span></div>
+      <div class="ch"><span class="dot ok"></span><span class="name">jobs</span><span class="meta">15 jobs · 1 min ago</span></div>
+      <div class="ch"><span class="dot ok"></span><span class="name">discord</span><span class="meta">2 h ago</span></div>
+      <div class="ch"><span class="dot warn"></span><span class="name">email</span><span class="meta">no session</span></div>
+      <div class="ch"><span class="dot off"></span><span class="name">telegram</span><span class="meta">disabled</span></div>
+    </div>
+  </section>
+
+  <section class="w c8"><h2>Jobs <em>jobs + runs</em></h2>
+    <table>
+      <thead><tr><th>job</th><th>trigger</th><th>last run</th><th>result</th><th>next</th></tr></thead>
+      <tbody>
+        <tr><td>doorbell-monitor</td><td class="muted">webhook</td><td class="muted">20:26</td><td><span class="tag ok">done</span></td><td class="muted">on event</td></tr>
+        <tr><td>nightly-clear</td><td class="muted">0 4 * * *</td><td class="muted">04:00</td><td><span class="tag ok">done</span></td><td class="muted">04:00</td></tr>
+        <tr><td>backup</td><td class="muted">30 4 * * *</td><td class="muted">04:30</td><td><span class="tag skip">nothing to do</span></td><td class="muted">04:30</td></tr>
+        <tr><td>knowledge-decay</td><td class="muted">0 3 * * 0</td><td class="muted">sun 03:00</td><td><span class="tag bad">error</span></td><td class="muted">sun 03:00</td></tr>
+        <tr><td>laundry</td><td class="muted">at 18:00</td><td class="muted">—</td><td><span class="tag skip">pending</span></td><td class="muted">18:00</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="w c7"><h2>Activity <em>loki · live</em></h2>
+    <div class="feed">
+      <div><span class="t">20:26:30</span><span class="src a">voice</span><span class="msg">speak <i>→ frode:</i> "Christer är vid dörren tillsammans med en okänd person."</span></div>
+      <div><span class="t">20:26:28</span><span class="src">jobs</span><span class="msg">doorbell-monitor <i>webhook · 1 unknown person, resembles Grim 22%</i></span></div>
+      <div><span class="t">20:03:37</span><span class="src">jobs</span><span class="msg">doorbell-monitor <i>timeline only, not announced</i></span></div>
+      <div><span class="t">19:57:05</span><span class="src a">voice</span><span class="msg">speak <i>→ all:</i> "En okänd person är vid dörren, verkar vara på väg därifrån."</span></div>
+      <div><span class="t">19:52:22</span><span class="src a">voice</span><span class="msg">ask <i>"Vad är klockan?" →</i> "Klockan är åtta minuter i åtta."</span></div>
+      <div><span class="t">19:50:27</span><span class="src">agent</span><span class="msg">Explore subagent <i>haiku · 2 tools · 20.7k tokens · 9.0 s</i></span></div>
+      <div><span class="t">19:49:21</span><span class="src">discord</span><span class="msg">reply <i>→ christer:</i> "Lampan i hallen är släckt."</span></div>
+      <div><span class="t cursor">now</span><span class="src"></span><span class="msg"></span></div>
+    </div>
+  </section>
+
+  <section class="w c5 gauge"><h2 style="position:absolute;top:14px;left:16px;right:16px">Solar <em>script · 60 s</em></h2>
+    <svg viewBox="0 0 120 120" style="margin-top:22px">
+      <circle class="track" cx="60" cy="60" r="48" fill="none" stroke-width="7" stroke-dasharray="226 302" transform="rotate(135 60 60)"/>
+      <circle class="arc" cx="60" cy="60" r="48" fill="none" stroke-width="7" stroke-dasharray="141 302" transform="rotate(135 60 60)"/>
+      <text class="num" x="60" y="62" text-anchor="middle">3.8</text><text class="unit" x="60" y="80" text-anchor="middle">KW</text>
+    </svg>
+    <dl style="margin-top:22px"><dt>today</dt><dd>21.4 kWh</dd><dt>peak</dt><dd>5.1 kW</dd><dt>export</dt><dd>9.2 kWh</dd><dt>battery</dt><dd>84 %</dd></dl>
+  </section>
+
+  <section class="w c6 spark"><h2>Cost, 24 h <em>loki</em></h2>
+    <svg viewBox="0 0 600 70" preserveAspectRatio="none">
+      <defs><linearGradient id="fill1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--primary)" stop-opacity=".35"/><stop offset="1" stop-color="var(--primary)" stop-opacity="0"/></linearGradient></defs>
+      <path class="a1" d="M0,64 L40,62 80,63 120,58 160,60 200,52 240,55 280,40 320,46 360,30 400,34 440,18 480,26 520,10 560,22 600,16 L600,70 L0,70 Z"/>
+      <path class="l1" d="M0,64 L40,62 80,63 120,58 160,60 200,52 240,55 280,40 320,46 360,30 400,34 440,18 480,26 520,10 560,22 600,16"/>
+      <path class="l2" d="M0,66 L40,66 80,65 120,64 160,65 200,62 240,63 280,58 320,60 360,55 400,57 440,50 480,54 520,46 560,52 600,48"/>
+    </svg>
+    <div class="legend"><span><i style="background:var(--primary)"></i>switchboard</span><span><i style="background:var(--accent)"></i>workstation</span></div>
+  </section>
+
+  <section class="w c6"><h2>Tool calls <em>loki</em></h2>
+    <div class="bars">
+      <div class="bar"><span class="n">voice.speak</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="val">41</span></div>
+      <div class="bar"><span class="n">Bash</span><span class="track"><span class="fill" style="width:73%"></span></span><span class="val">30</span></div>
+      <div class="bar"><span class="n">home.set</span><span class="track"><span class="fill" style="width:49%"></span></span><span class="val">20</span></div>
+      <div class="bar"><span class="n">iris.identify-burst</span><span class="track"><span class="fill" style="width:29%"></span></span><span class="val">12</span></div>
+      <div class="bar"><span class="n">discord.reply</span><span class="track"><span class="fill" style="width:15%"></span></span><span class="val">6</span></div>
+    </div>
+  </section>
+
+  <section class="w c6 md"><h2>Note <em>markdown</em></h2>
+    <p><strong>Guests Saturday.</strong> Doorbell announcements on all speakers until Sunday noon.</p>
+    <p>Widgets are defined in <code>config/dashboard.json</code>; the agent edits that file, never HTML.</p>
+  </section>
+
+  <section class="w c6 err"><h2>Widget error <em>config</em></h2>
+    <pre>widgets[7] "Heat pump": source.script exited 2
+  hp.ts: HA entity sensor.heatpump_power not found
+showing last good value from 19:40</pre>
+  </section>
+</main>
+<footer>mock data · three palettes · pick one, or mix: say which colour from which</footer>
+
+<script>
+const root = document.documentElement
+const sync = () => document.querySelectorAll('.controls button').forEach(b => {
+  const k = b.dataset.set, v = b.dataset.val
+  b.setAttribute('aria-pressed', String(v === 'toggle' ? root.dataset[k] === 'on' : root.dataset[k] === v))
+})
+document.querySelector('.controls').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return
+  const k = b.dataset.set, v = b.dataset.val
+  root.dataset[k] = v === 'toggle' ? (root.dataset[k] === 'on' ? 'off' : 'on') : v
+  sync()
+})
+sync()
+const tick = () => document.getElementById('clock').textContent = new Date().toLocaleTimeString('sv-SE')
+tick(); setInterval(tick, 1000)
+</script>
+</body>
+</html>
