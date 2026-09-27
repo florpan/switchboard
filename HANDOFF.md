@@ -12,9 +12,8 @@ image work and run in production for the first user. Open work in priority order
    status (running? which dialog is it waiting on? tmux capture), daemon log tail. Usage and activity come from
    the OpenTelemetry data (docs/deploy.md): metrics in Prometheus, events in Loki, traces with agent ids in
    Tempo. Decide whether the dashboard queries those stores or the daemon receives a copy from the collector.
-2. **Grafana usage dashboard** (quick win before the above): tokens and cost per deployment and model, sessions,
-   tool calls, and a trace view. Built on the same data.
-3. **Tests.** Only manual ones (`tests/fake-device.ts`, `/voice/ask`, job webhooks). A small smoke test that starts
+   A Grafana dashboard on the same data exists (`deploy/grafana/claude-code.json`); its queries are a good start.
+2. **Tests.** Only manual ones (`tests/fake-device.ts`, `/voice/ask`, job webhooks). A small smoke test that starts
    the daemon and exercises the jobs runner and routes would catch regressions.
 
 ## Later, if cheap
