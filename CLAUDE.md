@@ -43,3 +43,6 @@ Adding a channel: folder in `src/channels/`, register it in `src/main.ts`, plugi
 `docs/channels.md`.
 
 Docker: `docker build -t switchboard .`; see [docs/deploy.md](docs/deploy.md).
+
+Speaker firmware: `firmware/` is a separate ESP-IDF 5.5 project (C, Espressif style), built per board; see
+[firmware/README.md](firmware/README.md). `idf.py` needs an ESP-IDF shell, not Git Bash.

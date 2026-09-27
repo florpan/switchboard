@@ -7,7 +7,7 @@ workspace `.env`. `GET /api/channels` shows per channel whether a session is con
 
 ## voice
 
-ESP32 speakers ("Jarvis" firmware) keep a WebSocket open to `ws://<gateway>:8090/voice`.
+ESP32 speakers ([firmware/](../firmware/README.md)) keep a WebSocket open to `ws://<gateway>:8090/voice`.
 
 Protocol:
 - device → gateway: `{"event":"hello","device_id":"jarvis-aabbcc"}` on connect; binary PCM

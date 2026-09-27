@@ -24,3 +24,6 @@ image work and run in production for the first user. What is left, roughly in pr
    the daemon and exercises the jobs runner and routes would catch regressions.
 8. **Updating Claude Code in the image** is a manual `CLAUDE_CODE_VERSION` bump; document a routine (and consider
    checking the channels still register after each bump, since channels are a research preview).
+9. **Speaker firmware.** `firmware/` builds both boards. The Korvo-1 build now includes the playback ring
+   buffer, which has only been tested on the Waveshare; try it on a Korvo when one is reflashed anyway. The
+   Korvo case model goes into `firmware/` once it's finished.

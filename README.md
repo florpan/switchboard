@@ -14,6 +14,8 @@ What you get:
 
 - **Channels**: voice (ESP32 speakers, ElevenLabs speech), Discord, email (Resend), and jobs (cron, one-off
   and webhook triggers with shell steps that decide whether the model is needed at all).
+- **Firmware for the speakers** in [firmware/](firmware/README.md): a ready-made Waveshare smart speaker or
+  an Espressif Korvo-1 board. Optional; the other channels don't need them.
 - **A workspace that is yours**: persona, people, jobs, skills and notes live in your own git repo, apart
   from this code. The session keeps daily notes and can maintain its own configuration.
 - **A Home Assistant skill** that puts named devices, groups and house rules in front of HA.
@@ -76,6 +78,7 @@ Then: say something to a speaker, message the Discord bot, or `curl -X POST loca
 | [docs/jobs.md](docs/jobs.md) | Jobs: triggers (cron, at, webhook) and steps (bash, pwsh, prompt, say) |
 | [docs/workspace.md](docs/workspace.md) | Your workspace: CLAUDE.md, config, skills, notes, secrets, backups |
 | [docs/deploy.md](docs/deploy.md) | Running locally, allowlisting, the Docker image |
+| [firmware/README.md](firmware/README.md) | Voice speakers: supported boards, where to buy, building and flashing |
 | [CLAUDE.md](CLAUDE.md) | For agents working on this repo |
 
 ## License

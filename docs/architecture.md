@@ -62,6 +62,7 @@ scripts/summarize-session.ts transcript -> daily notes
 deploy/                      Docker entrypoint, compose example, managed settings (allowlist)
 workspace.example/           template for a new workspace
 tests/fake-device.ts         fake ESP32 speaker for testing voice
+firmware/                    ESP-IDF firmware for the speakers (Waveshare, Korvo-1)
 ```
 
 A channel is an object with `name`, `instructions` (delivered to the session when it connects),

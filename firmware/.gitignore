@@ -1,0 +1,6 @@
+# compiled-in WiFi credentials: copy wifi_config.h.example
+main/wifi_config.h
+build*/
+managed_components/
+sdkconfig
+sdkconfig.old

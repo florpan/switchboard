@@ -1,0 +1,13 @@
+#pragma once
+
+// Compiled-in defaults. All of these can be changed later on the device's web page
+// (http://<device-ip>), which saves them to flash. Leave WiFi empty to start in setup mode.
+#define WIFI_SSID ""
+#define WIFI_PASS ""
+
+// The daemon's voice endpoint
+#define GATEWAY_WS_URI "ws://192.168.1.10:8090/voice"
+
+// VAD silence timeout: number of consecutive silence frames before we stop streaming
+// At 16kHz with typical 32ms AFE chunks, 30 frames ≈ ~1 second of silence
+#define VAD_SILENCE_TIMEOUT 30
