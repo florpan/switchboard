@@ -91,7 +91,7 @@ Settings: `RESEND_API_KEY`, `RESEND_FROM_ADDRESS`, `RESEND_WEBHOOK_SECRET`, `EMA
 ## Security
 
 `GATEWAY_TOKEN` protects `/mcp/*` with a bearer token (set it for the daemon and the Claude process; the
-plugins send `Bearer ${GATEWAY_TOKEN}`). The other endpoints are meant for the local network, like the
+plugins send `Bearer ${GATEWAY_TOKEN}`). The Docker image sets a random one by default. The other endpoints are meant for the local network, like the
 devices and webhooks that call them.
 
 ## HTTP overview

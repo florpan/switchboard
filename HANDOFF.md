@@ -1,29 +1,35 @@
 # Handoff: open work
 
 State 2026-09-27: all four channels (voice, jobs, Discord, email), the Home skill, hooks, notes and the Docker
-image work and run in production for the first user. What is left, roughly in priority order.
+image work and run in production for the first user. Open work in priority order.
 
-## Product
+## Next
 
-1. **Dashboard (new).** Replace the old gateway's UI rather than port it. Wanted: channel status, jobs (list, edit,
-   run, run history), users and their channel identities (ACL: who may use Discord/email), settings, session status.
-   Available API: `GET /health`, `/api/channels`, `/api/jobs`, `/api/runs`, `/api/voice/devices`,
+1. **Usage metrics.** Claude Code's built-in OpenTelemetry (env vars only, nothing in this repo's code) sent to
+   an OpenTelemetry Collector, which forwards metrics to Prometheus, events to Loki and traces to Tempo; Grafana
+   on top. Enable prompts and tool details (`OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`) and the beta traces
+   (`CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`): only traces carry `agent_id`/`parent_agent_id`, which is what
+   shows which agent and subagent did what. Tag each source with `OTEL_RESOURCE_ATTRIBUTES`. Document the env
+   vars in docs/deploy.md once it works.
+2. **Dashboard (new, not a port of the old gateway UI).** Channel status, jobs (list, edit, run, run history),
+   users and their channel identities, session status, and live activity per agent and subagent from the
+   telemetry. Available API: `GET /health`, `/api/channels`, `/api/jobs`, `/api/runs`, `/api/voice/devices`,
    `POST /api/jobs/:id/run`. Missing API: job create/update/delete over HTTP (the session has tools for it),
    users read/write, session status (running? which dialog is it waiting on? tmux capture), daemon log tail.
-2. **Usage metrics.** Decision so far: not in this repo. Claude Code's built-in OpenTelemetry export (env vars only)
-   pointed at an existing collector/Grafana; document the env vars in docs/deploy.md once tried.
-3. **Discord: message a person, not a channel.** `reply` needs a `chat_id`; to DM someone who hasn't written first,
-   the channel needs a tool that takes a Discord user id (from users.json) and opens the DM.
-4. **Voice tuning.** `VOICE_REPLY_TIMEOUT` (20 s) fired on a first-use skill lookup in testing; watch whether it
-   is too eager. `/voice/ask` returns the first `speak`, which is an interim line when the session says "one
-   moment" first.
-5. **Compaction.** The design relies on regular `/clear` instead of compaction; no documented switch to turn
-   auto-compaction off was found. Check `/config` in the current client and document it.
-6. **GATEWAY_TOKEN by default in the Docker example**, so `/mcp/*` is not open on the network.
-7. **Tests.** Only manual ones (`tests/fake-device.ts`, `/voice/ask`, job webhooks). A small smoke test that starts
+3. **Tests.** Only manual ones (`tests/fake-device.ts`, `/voice/ask`, job webhooks). A small smoke test that starts
    the daemon and exercises the jobs runner and routes would catch regressions.
-8. **Updating Claude Code in the image** is a manual `CLAUDE_CODE_VERSION` bump; document a routine (and consider
-   checking the channels still register after each bump, since channels are a research preview).
-9. **Speaker firmware.** `firmware/` builds both boards. The Korvo-1 build now includes the playback ring
-   buffer, which has only been tested on the Waveshare; try it on a Korvo when one is reflashed anyway. The
-   Korvo case model goes into `firmware/` once it's finished.
+
+## Later, if cheap
+
+- **Discord: message a person, not a channel.** `reply` needs a `chat_id`, so the person has to write first;
+  good enough for now. A tool that takes a Discord user id (from users.json) and opens the DM would remove that.
+- **Speaker firmware.** `firmware/` builds both boards. The Korvo-1 build now includes the playback ring buffer,
+  which has only been tested on the Waveshare; try it when a Korvo is reflashed anyway. The Korvo case model goes
+  into `firmware/` once it's finished.
+
+## Watching, no action
+
+- **Voice timing.** `VOICE_REPLY_TIMEOUT` (20 s) once fired on a first-use skill lookup; `/voice/ask` returns the
+  first `speak`, which can be an interim "one moment". Fine in daily use so far.
+- **Compaction.** Nightly `/clear` works and a day's session hasn't come near compaction.
+- **Claude Code updates** in the image are a `CLAUDE_CODE_VERSION` bump and a rebuild.

@@ -9,10 +9,13 @@
     },
     {
       "id": "backup",
-      "description": "Commit and push the workspace",
+      "description": "Commit, pull and push the workspace; the session only hears about failures",
       "schedule": "30 4 * * *",
       "enabled": false,
-      "steps": [{ "bash": "git add -A && (git diff --cached --quiet || git commit -qm \"backup $(date +%F)\") && git push -q" }]
+      "steps": [
+        { "bash": "out=$( (git add -A && (git diff --cached --quiet || git commit -qm \"backup $(date +%F)\") && git pull -q --rebase && git push -q) 2>&1 ) && exit 1; echo \"$out\"" },
+        { "prompt": "The nightly workspace backup (commit, pull --rebase, push) failed:\n{output}\nFix it if the cause is clear and the fix is safe, then push. Otherwise email the owner what happened and what you found." }
+      ]
     },
     {
       "id": "doorbell",

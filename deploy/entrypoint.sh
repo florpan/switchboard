@@ -12,6 +12,10 @@ if [ ! -f "$WS/.claude/settings.json" ]; then
   exit 1
 fi
 mkdir -p "$WS/state" "$WS/inbox"
+
+# Protect /mcp/* by default. Daemon and session both inherit it from here; a token only in the
+# workspace .env would reach the daemon but not the session's plugins.
+export GATEWAY_TOKEN="${GATEWAY_TOKEN:-$(bun -e 'console.log(crypto.randomUUID())')}"
 git config --global --add safe.directory "$WS"
 
 # Plugins come from the image's marketplace. User scope, so the workspace repo isn't rewritten.

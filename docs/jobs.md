@@ -77,8 +77,12 @@ writes the day's notes:
 { "id": "nightly-clear", "schedule": "0 4 * * *", "steps": [{ "bash": "tmux send-keys -t gateway /clear Enter" }] }
 ```
 
-Back up the workspace:
+Back up the workspace, and let the session deal with it only when something fails. The shell step
+turns the usual meaning around: success exits 1 (nothing to do), a failure prints git's output and exits
+0, so the prompt step runs with it:
 ```json
 { "id": "backup", "schedule": "30 4 * * *",
-  "steps": [{ "bash": "git add -A && (git diff --cached --quiet || git commit -qm \"backup $(date +%F)\") && git push -q" }] }
+  "steps": [
+    { "bash": "out=$( (git add -A && (git diff --cached --quiet || git commit -qm \"backup $(date +%F)\") && git pull -q --rebase && git push -q) 2>&1 ) && exit 1; echo \"$out\"" },
+    { "prompt": "The nightly workspace backup (commit, pull --rebase, push) failed:\n{output}\nFix it if the cause is clear and the fix is safe, then push. Otherwise email the owner what happened and what you found." } ] }
 ```

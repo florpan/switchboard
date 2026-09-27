@@ -59,6 +59,11 @@ name, gateway), `CLAUDE_ARGS` (extra flags, e.g. `--dangerously-skip-permissions
 never waits on a prompt; the container is the sandbox), `TZ`. Other settings can go in the compose
 `environment` or in the workspace `.env`; the process environment wins over `.env`.
 
+`/mcp/*` is protected by `GATEWAY_TOKEN`. Without one in the compose `environment`, the entrypoint makes a
+random token at every start and hands it to both the daemon and the session. Set it yourself only if
+something outside the container connects to `/mcp/*`, and then in the compose `environment`, not in `.env`:
+the daemon reads `.env`, the session's plugins don't.
+
 ### Preparing the host
 
 The container runs as uid **1001**, a user that normally doesn't exist on the host. Both mounted folders
