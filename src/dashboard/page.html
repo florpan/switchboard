@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" data-glow="on" data-scan="on" data-static="on">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>switchboard</title>
+<style>
+/* Colours come from the config's theme (a preset plus overrides) as --bg, --primary, ... set on :root. */
+:root {
+  --bg: #070a12; --bg-2: #0c1220; --panel: rgba(14, 22, 38, .72); --line: #1b2a44;
+  --text: #d6e2f0; --muted: #6b7f99; --dim: #34445c;
+  --primary: #00e5ff; --accent: #ff2bd6; --ok: #2dffb3; --warn: #ffb020; --bad: #ff3b5c;
+  --grid: rgba(0, 229, 255, .05);
+  --font: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, ui-monospace, monospace;
+  --glow-1: 0 0 6px; --glow-2: 0 0 18px;
+  --row: 64px;
+}
+:root[data-glow="off"] { --glow-1: 0 0 0; --glow-2: 0 0 0; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 32px 32px,
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text); font: 13px/1.45 var(--font); letter-spacing: .02em;
+}
+
+/* "The sky above the port was the color of television, tuned to a dead channel." */
+.static, .scan { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+.static { opacity: .07; mix-blend-mode: screen; animation: flicker 180ms steps(2) infinite; }
+.scan { background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px); }
+:root[data-static="off"] .static, :root[data-scan="off"] .scan { display: none; }
+@keyframes flicker { 0% { transform: translate(0,0) } 50% { transform: translate(-3%, 2%) } 100% { transform: translate(2%, -3%) } }
+@media (prefers-reduced-motion: reduce) { .static, .dot.ok, .cursor::after { animation: none !important; } }
+
+header {
+  display: flex; align-items: center; gap: 18px; padding: 14px 22px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg-2) 80%, transparent);
+  position: sticky; top: 0; z-index: 10; backdrop-filter: blur(6px);
+}
+.brand { font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--primary);
+  text-shadow: var(--glow-1) color-mix(in srgb, var(--primary) 70%, transparent), var(--glow-2) color-mix(in srgb, var(--primary) 35%, transparent); }
+.brand span { color: var(--accent); text-shadow: var(--glow-1) color-mix(in srgb, var(--accent) 70%, transparent); }
+.clock { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px; border: 1px solid var(--line); color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: .15em; }
+nav { display: flex; gap: 8px; flex-wrap: wrap; }
+nav a {
+  font-size: 11px; letter-spacing: .15em; text-transform: uppercase; text-decoration: none;
+  color: var(--muted); border: 1px solid var(--line); padding: 5px 10px;
+}
+nav a[aria-current="page"] { color: var(--bg); background: var(--primary); border-color: var(--primary);
+  box-shadow: var(--glow-2) color-mix(in srgb, var(--primary) 45%, transparent); }
+
+main { display: grid; grid-template-columns: repeat(var(--cols, 12), 1fr); grid-auto-rows: var(--row); gap: 16px; padding: 22px; max-width: 1500px; margin: 0 auto; }
+/* Narrow screens: ignore "at", stack widgets in reading order. */
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  main > .w { grid-column: 1 / -1 !important; grid-row: auto !important; min-height: 120px; }
+}
+
+/* Panel with corner brackets */
+.w { position: relative; background: var(--panel); border: 1px solid var(--line); padding: 14px 16px 16px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.w::before, .w::after { content: ""; position: absolute; width: 12px; height: 12px; border: 1px solid var(--primary);
+  filter: drop-shadow(var(--glow-1) color-mix(in srgb, var(--primary) 80%, transparent)); }
+.w::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.w::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+.w h2 { margin: 0 0 12px; font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex: none; }
+.w h2 em { font-style: normal; color: var(--dim); }
+.w .body { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.w .stale { flex: none; margin-top: 8px; color: var(--bad); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { color: var(--dim); }
+
+/* stat */
+.t-stat .v { font-size: 38px; font-weight: 700; line-height: 1.1; color: var(--c, var(--text)); font-variant-numeric: tabular-nums;
+  text-shadow: var(--glow-2) color-mix(in srgb, var(--c, var(--primary)) 35%, transparent); }
+.t-stat .v small { font-size: 16px; color: var(--muted); font-weight: 500; margin-left: 4px; text-shadow: none; }
+.t-stat .sub { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+/* status dots */
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ok { background: var(--ok); box-shadow: var(--glow-1) var(--ok), var(--glow-2) color-mix(in srgb, var(--ok) 50%, transparent); animation: pulse 2.4s ease-in-out infinite; }
+.dot.warn { background: var(--warn); box-shadow: var(--glow-1) var(--warn); }
+.dot.bad { background: var(--bad); box-shadow: var(--glow-1) var(--bad), var(--glow-2) color-mix(in srgb, var(--bad) 50%, transparent); }
+.dot.off { background: var(--dim); }
+@keyframes pulse { 50% { opacity: .55 } }
+
+.rows { display: grid; gap: 8px; align-content: start; }
+.ch { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 50%, transparent); }
+.ch.nodot { grid-template-columns: 1fr auto; }
+.ch .name { text-transform: uppercase; letter-spacing: .16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-list .ch .name { text-transform: none; letter-spacing: .02em; }
+.ch .meta { color: var(--muted); font-size: 12px; text-align: right; }
+
+/* table */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 500; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); padding: 0 8px 8px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg-2); }
+td { padding: 8px; border-bottom: 1px dashed color-mix(in srgb, var(--line) 70%, transparent); white-space: nowrap; max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
+td.muted { color: var(--muted); }
+tr:hover td { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+.tag { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; padding: 2px 7px; border: 1px solid; }
+.tag.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, transparent); }
+.tag.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, transparent); text-shadow: var(--glow-1) color-mix(in srgb, var(--bad) 60%, transparent); }
+.tag.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+.tag.skip { color: var(--muted); border-color: var(--line); }
+
+/* feed */
+.feed { display: grid; gap: 2px; align-content: start; }
+.feed div { display: grid; grid-template-columns: 70px 110px 1fr; gap: 10px; padding: 4px 0; }
+.feed .t { color: var(--dim); font-variant-numeric: tabular-nums; }
+.feed .src { color: var(--primary); text-transform: uppercase; font-size: 11px; letter-spacing: .12em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed .src.a { color: var(--accent); }
+.feed .msg { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed .msg i { color: var(--muted); font-style: normal; }
+.cursor::after { content: "▍"; color: var(--primary); animation: blink 1s steps(1) infinite; text-shadow: var(--glow-1) var(--primary); }
+@keyframes blink { 50% { opacity: 0 } }
+
+/* gauge + sparkline */
+.t-gauge .body { display: flex; align-items: center; gap: 18px; }
+.t-gauge svg { height: 100%; max-height: 150px; aspect-ratio: 1; flex: none; }
+.t-gauge .track { stroke: var(--line); }
+.t-gauge .arc { stroke: var(--c, var(--primary)); filter: drop-shadow(var(--glow-1) var(--c, var(--primary))); }
+.t-gauge .num { fill: var(--text); font: 700 26px var(--font); }
+.t-gauge .unit { fill: var(--muted); font: 11px var(--font); letter-spacing: .15em; text-transform: uppercase; }
+.t-gauge dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 4px 14px; color: var(--muted); font-size: 12px; }
+.t-gauge dd { margin: 0; color: var(--text); text-align: right; }
+.t-sparkline .body { display: flex; flex-direction: column; overflow: hidden; }
+.t-sparkline svg { width: 100%; flex: 1; min-height: 40px; display: block; overflow: visible; }
+.t-sparkline .line { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.t-sparkline .s0 { stroke: var(--primary); filter: drop-shadow(var(--glow-1) var(--primary)); }
+.t-sparkline .s1 { stroke: var(--accent); stroke-dasharray: 3 3; }
+.t-sparkline .s2 { stroke: var(--ok); } .t-sparkline .s3 { stroke: var(--warn); } .t-sparkline .s4 { stroke: var(--muted); }
+.t-sparkline .area { fill: url(#fill); }
+.legend { display: flex; gap: 16px; font-size: 11px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+.legend b { color: var(--text); font-weight: 500; margin-left: 6px; }
+
+.bars { display: grid; gap: 7px; align-content: start; }
+.bar { display: grid; grid-template-columns: minmax(80px, 170px) 1fr 64px; align-items: center; gap: 10px; font-size: 12px; }
+.bar .n { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .track { height: 6px; background: color-mix(in srgb, var(--line) 70%, transparent); position: relative; }
+.bar .fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--primary), var(--accent)); box-shadow: var(--glow-1) color-mix(in srgb, var(--primary) 60%, transparent); }
+.bar .val { text-align: right; font-variant-numeric: tabular-nums; }
+
+.t-markdown p, .t-markdown ul { margin: 0 0 8px; color: var(--muted); } .t-markdown ul { padding-left: 18px; }
+.t-markdown h3 { margin: 0 0 8px; font-size: 13px; color: var(--text); letter-spacing: .1em; }
+.t-markdown strong { color: var(--text); } .t-markdown code { color: var(--accent); } .t-markdown a { color: var(--primary); }
+.t-image .body { display: flex; align-items: center; justify-content: center; }
+.t-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.err { border-color: color-mix(in srgb, var(--bad) 60%, transparent); }
+.err::before, .err::after { border-color: var(--bad); }
+.err h2 { color: var(--bad); }
+.err pre { margin: 0; color: var(--muted); white-space: pre-wrap; font: 12px var(--font); }
+#banner { max-width: 1500px; margin: 0 auto; padding: 0 22px; }
+#banner:not(:empty) { padding-top: 22px; }
+.offline .pill .dot { background: var(--bad); }
+</style>
+</head>
+<body>
+<svg class="static" width="100%" height="100%" aria-hidden="true">
+  <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+  <rect width="140%" height="140%" filter="url(#noise)"/>
+</svg>
+<div class="scan" aria-hidden="true"></div>
+
+<header>
+  <div class="brand" id="brand">switchboard</div>
+  <div class="pill" id="session"><span class="dot off"></span>connecting</div>
+  <nav id="pages"></nav>
+  <div class="clock" id="clock">--:--:--</div>
+</header>
+<div id="banner"></div>
+<main id="grid"></main>
+<script src="/dashboard/client.js"></script>
+</body>
+</html>

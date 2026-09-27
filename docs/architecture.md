@@ -17,6 +17,8 @@ events that arrive while it is busy are queued and handled after the current tur
 - turns what arrives into channel events for the session,
 - carries out the channel tools the session calls (speak, reply, send_email, add_job, ...).
 
+It also serves a dashboard at `/dashboard`, laid out by `config/dashboard.json` ([dashboard.md](dashboard.md)).
+
 It runs independently of the session. Claude Code connects to it as an MCP client over HTTP, one MCP
 server per channel at `/mcp/<channel>`. Either side can restart: the session reconnects to a
 restarted daemon by itself; the daemon keeps working (and says so on voice) while no session is
@@ -24,8 +26,8 @@ connected.
 
 **Plugins** (`plugins/`, marketplace in `.claude-plugin/marketplace.json`). Each channel is a plugin
 that only contains the URL of its MCP endpoint (`${GATEWAY_URL:-http://127.0.0.1:8090}/mcp/<name>`), so a
-session opts into channels one by one with `--channels plugin:<name>@switchboard`. The `home` plugin
-ships the generic Home skill.
+session opts into channels one by one with `--channels plugin:<name>@switchboard`. The `home` and
+`dashboard` plugins ship the generic Home and Dashboard skills.
 
 **Hooks** (`hooks/`, wired in the workspace's `.claude/settings.json`).
 - `SessionStart` (startup, after `/clear`): starts the daemon if none answers, then prints
@@ -54,6 +56,7 @@ src/core/channel.ts          the Channel interface and the Gateway services chan
 src/core/mcp.ts              one MCP endpoint per channel: sessions, tools, push (adds time=...)
 src/core/server.ts           HTTP + WebSocket routing, /health, /api/channels
 src/core/users.ts            config/users.json: channel identities -> people
+src/dashboard/               /dashboard: config/dashboard.json, source runners, browser page
 src/channels/<name>/         one folder per channel (voice, jobs, discord, email)
 plugins/<name>/              plugin manifests (channels: URL only; home: skill)
 hooks/                       SessionStart / SessionEnd scripts

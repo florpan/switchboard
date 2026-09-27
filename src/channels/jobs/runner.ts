@@ -22,7 +22,7 @@ export type RunResult = {
 
 // On Windows plain `bash` is usually WSL, which doesn't see our environment: prefer Git Bash.
 const GIT_BASH = 'C:\\Program Files\\Git\\bin\\bash.exe'
-const BASH = process.env.GATEWAY_BASH ?? (process.platform === 'win32' && existsSync(GIT_BASH) ? GIT_BASH : 'bash')
+export const BASH = process.env.GATEWAY_BASH ?? (process.platform === 'win32' && existsSync(GIT_BASH) ? GIT_BASH : 'bash')
 
 const shells: Record<string, (cmd: string) => string[]> = {
   bash: cmd => [BASH, '-c', cmd],

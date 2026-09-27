@@ -1,0 +1,18 @@
+{
+  "title": "Usage",
+  "columns": 12,
+  "widgets": [
+    { "type": "stat", "title": "Cost today", "prefix": "$", "decimals": 2, "at": [0, 0, 3, 2],
+      "source": { "loki": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cost_usd [$range]))" } },
+    { "type": "stat", "title": "Prompts today", "at": [3, 0, 3, 2],
+      "source": { "loki": "sum(count_over_time({service_name=\"claude-code\"} | event_name=\"user_prompt\" [$range]))" } },
+    { "type": "sparkline", "title": "Cost, 24 h", "show": "sum", "prefix": "$", "decimals": 2, "at": [6, 0, 6, 3],
+      "source": { "loki": "sum by (deployment) (sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cost_usd [$step]))", "series": true, "range": "24h" } },
+    { "type": "bars", "title": "Cost by model", "prefix": "$", "decimals": 2, "at": [0, 2, 6, 3],
+      "source": { "loki": "sum by (model) (sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cost_usd [$range]))" } },
+    { "type": "bars", "title": "Tool calls today", "at": [0, 5, 6, 4],
+      "source": { "loki": "topk(10, sum by (tool) (count_over_time({service_name=\"claude-code\"} | event_name=\"tool_result\" | label_format tool=`{{ if eq .tool_name \"mcp_tool\" }}{{ regexReplaceAll \".*\\\"mcp_server_name\\\":\\\"([^\\\"]+)\\\",\\\"mcp_tool_name\\\":\\\"([^\\\"]+)\\\".*\" .tool_parameters \"${1}.${2}\" }}{{ else }}{{ .tool_name }}{{ end }}` [$range])))" } },
+    { "type": "feed", "title": "Conversation", "at": [6, 3, 6, 6],
+      "source": { "loki": "{service_name=\"claude-code\"} | event_name=~\"user_prompt|assistant_response\" | query_source!=\"prompt_suggestion\" | line_format `{{ if eq .event_name \"user_prompt\" }}▶ {{.prompt}}{{ else }}◀ {{.response}}{{ end }}`", "range": "24h", "label": "deployment", "limit": 40 } }
+  ]
+}

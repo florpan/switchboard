@@ -172,3 +172,7 @@ by source (main thread, subagents, background requests); tool calls with MCP too
 subagents; the conversation (prompts and replies) and every tool call with its input; and the turns as traces.
 Usage numbers come from the `api_request` events (exact per request), not from the metric counters, which are
 split per session. Filter by `deployment` at the top.
+
+The switchboard dashboard can show the same numbers next to channels and jobs: set `LOKI_URL` (and
+`PROMETHEUS_URL`) for the daemon and add `loki` widgets; the Dashboard skill has a ready usage page. See
+[dashboard.md](dashboard.md#sources).

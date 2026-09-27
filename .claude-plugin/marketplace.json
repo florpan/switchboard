@@ -27,6 +27,11 @@
       "name": "home",
       "source": "./plugins/home",
       "description": "Home skill: Home Assistant through a curated registry"
+    },
+    {
+      "name": "dashboard",
+      "source": "./plugins/dashboard",
+      "description": "Dashboard skill: layout, widgets, sources and theme of the switchboard dashboard"
     }
   ],
   "name": "switchboard"

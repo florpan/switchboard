@@ -10,7 +10,8 @@ workspace/
 ├── .claude/
 │   ├── settings.json       enabled plugins, permissions, hooks (point to ../hooks)
 │   └── skills/             your own skills
-├── config/                 users.json, jobs.json, home.json, voice-devices.json      (committed)
+├── config/                 users.json, jobs.json, home.json, voice-devices.json,     (committed)
+│                           dashboard.json
 ├── notes/                  notes; daily/YYYY/MM/DD.md written from the transcript     (committed)
 ├── state/                  runtime state of scripts, gateway.log                    (ignored)
 ├── inbox/                  files that arrived on channels                           (ignored)
@@ -43,6 +44,9 @@ called from job steps. A `package.json` in a skill folder is installed at contai
   house rules. `bun <skill>/home.ts state|do|find|unmapped|import|add|rename|alias|group|rules`, one line per
   device. `import` seeds the registry from Home Assistant areas; the session keeps it tidy as people use
   names. Needs `HA_URL` and `HA_TOKEN`.
+- **Dashboard** (plugin `dashboard@switchboard`): the schema of `config/dashboard.json` for the session, and
+  `bun <skill>/dashboard.ts check|show` to validate it and see what each widget gets. See
+  [dashboard.md](dashboard.md).
 - Your own skills go in `.claude/skills/<Name>/`, for example wrappers around your own services. Use
   `allowed-tools: Bash(bun ${CLAUDE_SKILL_DIR}/tool.ts *)` in the frontmatter so they run without
   permission prompts, and read settings from the workspace `.env`.
@@ -68,6 +72,7 @@ The daemon and the skills read the workspace `.env`; process environment wins.
 | `DISCORD_*` | Discord |
 | `RESEND_*`, `EMAIL_*` | Email |
 | `HA_URL`, `HA_TOKEN` | Home skill |
+| `LOKI_URL`, `PROMETHEUS_URL` | Query sources for the dashboard, see [dashboard.md](dashboard.md#sources) |
 | `TZ` | Time zone for event times and cron |
 
 ## Backups and self-maintenance

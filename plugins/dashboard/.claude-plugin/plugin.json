@@ -1,0 +1,5 @@
+{
+  "name": "dashboard",
+  "description": "Dashboard skill: change the switchboard dashboard by editing config/dashboard.json.",
+  "version": "0.1.0"
+}

@@ -7,6 +7,7 @@ import { ChannelEndpoint } from './core/mcp'
 import { serve } from './core/server'
 import { log } from './core/log'
 import { Users } from './core/users'
+import { dashboard } from './dashboard'
 import { voice } from './channels/voice'
 import { jobs } from './channels/jobs'
 import { discord } from './channels/discord'
@@ -49,17 +50,23 @@ for (const name of enabled) {
 
 for (const channel of channels) await channel.start?.()
 
-serve({
+// The dashboard reads the same /api routes a browser would, straight from the server without a socket.
+const board = dashboard({ configDir, workspace, log, local: async path => (await server.fetch(new Request(`http://local${path}`))).json() })
+
+const server = serve({
   host: process.env.GATEWAY_HOST ?? '0.0.0.0',
   port: Number(process.env.GATEWAY_PORT ?? 8090),
   token: process.env.GATEWAY_TOKEN || undefined,
   channels,
   endpoints,
+  routes: board.routes,
 })
+board.start()
 log('gateway', `channels: ${channels.map(c => c.name).join(', ')} · workspace: ${workspace}`)
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
   process.on(signal, async () => {
+    board.stop()
     for (const channel of channels) await channel.stop?.()
     process.exit(0)
   })

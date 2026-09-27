@@ -1,0 +1,25 @@
+{
+  "title": "switchboard // assistant",
+  "theme": { "preset": "chiba", "glow": true, "scanlines": true, "static": true },
+  "pages": [
+    {
+      "title": "Home",
+      "columns": 12,
+      "widgets": [
+        { "type": "stat", "title": "Sessions", "source": "health", "field": "connected", "sub": "channels with a live session", "at": [0, 0, 3, 2] },
+        { "type": "stat", "title": "Jobs", "source": "jobs", "field": "length", "sub": "in config/jobs.json", "at": [3, 0, 3, 2] },
+        { "type": "stat", "title": "Speakers", "source": "devices", "field": "length", "sub": "connected now", "at": [6, 0, 3, 2] },
+        { "type": "stat", "title": "Job runs", "source": "runs", "field": "length", "sub": "since the daemon started", "color": "accent", "at": [9, 0, 3, 2] },
+        { "type": "status", "title": "Channels", "source": "channels", "at": [0, 2, 4, 4] },
+        { "type": "table", "title": "Jobs", "source": "jobs", "columns": ["id", "trigger", "lastRun", "result", "next"], "at": [4, 2, 8, 4] },
+        { "type": "feed", "title": "Job runs", "source": "runs", "limit": 30, "at": [0, 6, 7, 4] },
+        {
+          "type": "markdown",
+          "title": "Note",
+          "text": "**This dashboard is config.** Ask the assistant to change it: it edits `config/dashboard.json` (see the Dashboard skill).\n\nAdd your own widgets with `script`, `http`, `loki` or `prometheus` sources.",
+          "at": [7, 6, 5, 4]
+        }
+      ]
+    }
+  ]
+}

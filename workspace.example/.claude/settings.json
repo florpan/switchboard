@@ -4,7 +4,8 @@
     "jobs@switchboard": true,
     "discord@switchboard": true,
     "email@switchboard": true,
-    "home@switchboard": true
+    "home@switchboard": true,
+    "dashboard@switchboard": true
   },
   "permissions": {
     "allow": [

@@ -11,14 +11,20 @@ export function serve(opts: {
   token?: string
   channels: Channel[]
   endpoints: Map<string, ChannelEndpoint>
+  /** Routes that don't belong to a channel (the dashboard). */
+  routes?: Record<string, RouteHandler>
 }) {
   const routes: Route[] = []
   const sockets = new Map<string, SocketHandler>()
-  for (const channel of opts.channels) {
-    for (const [key, handler] of Object.entries(channel.routes ?? {})) {
+  const addRoutes = (entries: Record<string, RouteHandler> = {}) => {
+    for (const [key, handler] of Object.entries(entries)) {
       const [method = '', path = ''] = key.split(' ')
       routes.push({ method, parts: path.split('/'), handler })
     }
+  }
+  addRoutes(opts.routes)
+  for (const channel of opts.channels) {
+    addRoutes(channel.routes)
     for (const [path, handler] of Object.entries(channel.sockets ?? {})) sockets.set(path, handler)
   }
 
