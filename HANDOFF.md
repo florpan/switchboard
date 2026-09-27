@@ -5,8 +5,7 @@ image work and run in production for the first user. Open work in priority order
 
 ## Next
 
-1. **Dashboard.** Planned 2026-09-27, see [the plan below](#dashboard-plan). First step: the owner picks a
-   palette in `design/dashboard-palettes.html`.
+1. **Dashboard.** Planned 2026-09-27, see [the plan below](#dashboard-plan). Palette picked (Chiba); ready to build.
 2. **Tests.** Only manual ones (`tests/fake-device.ts`, `/voice/ask`, job webhooks). A small smoke test that starts
    the daemon and exercises the jobs runner and routes would catch regressions.
 
@@ -71,7 +70,8 @@ runners on the server, plain TypeScript modules for the browser, no framework). 
 Look: futuristic, dark, neon accents, glow; Neuromancer, not the Matrix (no green, no character rain). Three
 palettes in `design/dashboard-palettes.html`: **Chiba** (cyan and magenta on blue-black), **Sprawl ICE** (cold
 blue and ultraviolet), **Dead channel** (chrome greys with sodium amber). Glow, scanlines and a faint TV-static
-overlay can each be switched off there to judge the effects. Pending: the owner's pick.
+overlay can each be switched off there to judge the effects. **Picked: Chiba** (2026-09-27, from screenshots;
+the owner will still check the effects in the HTML). Its variables in that file are the default theme.
 
 ## Watching, no action
 
