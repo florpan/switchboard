@@ -25,5 +25,8 @@ is built and tested locally, not yet deployed. Open work in priority order.
 
 - **Voice timing.** `VOICE_REPLY_TIMEOUT` (20 s) once fired on a first-use skill lookup; `/voice/ask` returns the
   first `speak`, which can be an interim "one moment". Fine in daily use so far.
-- **Compaction.** Nightly `/clear` works and a day's session hasn't come near compaction.
+- **Nightly restart.** `/clear` left the channels registered but without event streams, so every event was
+  dropped until a restart (2026-09-28/29). The nightly job now sends `/exit` and the tmux loop starts a fresh
+  session, and the daemon counts a session as connected only while its event stream is open. Check the morning
+  after (2026-09-30) that channels answer; a day's session hasn't come near compaction.
 - **Claude Code updates** in the image are a `CLAUDE_CODE_VERSION` bump and a rebuild.

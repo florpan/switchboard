@@ -71,10 +71,12 @@ Reminder on one speaker:
 { "id": "laundry", "at": "2026-09-25T18:00:00+02:00", "steps": [{ "say": "The laundry is done.", "device": "kitchen" }] }
 ```
 
-Clear the session every night (needs claude in tmux, as in the Docker image); the SessionEnd hook
-writes the day's notes:
+Start a fresh session every night (needs claude in the Docker image's tmux loop, which starts it again
+after `/exit`); the SessionEnd hook writes the day's notes. Use a restart rather than `/clear`: after
+`/clear` Claude Code registers the channel servers again but doesn't reopen their event streams, so
+channel events stop arriving:
 ```json
-{ "id": "nightly-clear", "schedule": "0 4 * * *", "steps": [{ "bash": "tmux send-keys -t gateway /clear Enter" }] }
+{ "id": "nightly-restart", "schedule": "0 4 * * *", "steps": [{ "bash": "tmux send-keys -t gateway /exit Enter" }] }
 ```
 
 Back up the workspace, and let the session deal with it only when something fails. The shell step

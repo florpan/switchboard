@@ -6,7 +6,9 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import type { Channel } from './channel'
 import { log } from './log'
 
-type Session = { server: Server; transport: WebStandardStreamableHTTPServerTransport }
+// streams: open GET (SSE) streams. Notifications only travel over that stream, and the SDK drops them
+// silently when there is none, so a session without one is registered but deaf (seen after /clear).
+type Session = { server: Server; transport: WebStandardStreamableHTTPServerTransport; streams: number }
 
 /** e.g. 2026-09-25T10:17:54+02:00 (Thu) in the process time zone (set TZ). */
 function localTime(now = new Date()) {
@@ -23,7 +25,7 @@ export class ChannelEndpoint {
   constructor(private channel: Channel) {}
 
   get connected() {
-    return this.sessions.size > 0
+    return [...this.sessions.values()].some(s => s.streams > 0)
   }
 
   async handle(req: Request): Promise<Response> {
@@ -31,24 +33,62 @@ export class ChannelEndpoint {
     if (id) {
       const session = this.sessions.get(id)
       if (!session) return new Response('unknown session', { status: 404 })
-      return session.transport.handleRequest(req)
+      const res = await session.transport.handleRequest(req)
+      return req.method === 'GET' ? this.watch(session, res) : res
     }
     return this.open().handleRequest(req)
   }
 
-  /** Every connected session gets the event. Normally that is exactly one gateway session. */
+  /** Every listening session gets the event. Normally that is exactly one gateway session. */
   async push(content: string, meta: Record<string, string> = {}) {
     // Local time on every event, so the model never needs a tool call to know it.
     const params = { content, meta: { time: localTime(), ...meta } }
-    for (const [id, { server }] of this.sessions) {
+    let delivered = false
+    for (const [id, { server, streams }] of this.sessions) {
+      if (!streams) {
+        log(this.channel.name, `session ${id} has no open event stream, event not delivered`)
+        continue
+      }
       try {
         await server.notification({ method: 'notifications/claude/channel', params })
+        delivered = true
       } catch (err) {
         log(this.channel.name, `push to session ${id} failed, dropping it:`, err)
         this.sessions.delete(id)
       }
     }
-    return this.sessions.size > 0
+    return delivered
+  }
+
+  /** Counts the session's GET stream while it is open. */
+  private watch(session: Session, res: Response) {
+    if (!res.ok || !res.body) return res
+    const reader = res.body.getReader()
+    let open = true
+    const close = () => {
+      if (!open) return
+      open = false
+      session.streams--
+    }
+    session.streams++
+    const body = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        try {
+          const { done, value } = await reader.read()
+          if (!done) return controller.enqueue(value)
+          close()
+          controller.close()
+        } catch (err) {
+          close()
+          controller.error(err)
+        }
+      },
+      cancel(reason) {
+        close()
+        return reader.cancel(reason)
+      },
+    })
+    return new Response(body, { status: res.status, headers: res.headers })
   }
 
   private open() {
@@ -84,7 +124,7 @@ export class ChannelEndpoint {
           this.sessions.delete(old)
           session.transport.close().catch(() => {})
         }
-        this.sessions.set(id, { server, transport })
+        this.sessions.set(id, { server, transport, streams: 0 })
         log(channel.name, 'session connected')
       },
       onsessionclosed: id => {

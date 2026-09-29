@@ -1,11 +1,11 @@
 {
   "jobs": [
     {
-      "id": "nightly-clear",
-      "description": "Start each day with an empty context (needs claude in tmux, as in the Docker image); the SessionEnd hook writes the notes",
+      "id": "nightly-restart",
+      "description": "Start each day with a fresh session (needs claude in the Docker image's tmux restart loop); the SessionEnd hook writes the notes",
       "schedule": "0 4 * * *",
       "enabled": false,
-      "steps": [{ "bash": "tmux send-keys -t gateway /clear Enter" }]
+      "steps": [{ "bash": "tmux send-keys -t gateway /exit Enter" }]
     },
     {
       "id": "backup",
