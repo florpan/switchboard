@@ -28,7 +28,14 @@ export function voice(gw: Gateway): Channel {
   function say(device: Device, text: string) {
     clearTimeout(device.waiting)
     device.waiting = undefined
-    device.speaking = device.speaking.then(() => speak(device.ws, text)).catch(err => log(`speak on ${device.name} failed:`, err))
+    device.speaking = device.speaking
+      .then(() => speak(device.ws, text))
+      .then(s =>
+        log(
+          `spoke on ${device.name}: ${s.bytes} bytes in ${s.chunks} chunks (${s.oddChunks} odd), first byte ${s.firstByteMs} ms, longest gap ${s.maxGapMs} ms`,
+        ),
+      )
+      .catch(err => log(`speak on ${device.name} failed:`, err))
     return device.speaking
   }
 

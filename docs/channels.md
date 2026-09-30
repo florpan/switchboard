@@ -18,7 +18,11 @@ Protocol:
 Speech is transcribed with ElevenLabs Scribe (realtime while streaming, REST as fallback) and pushed as
 `<channel ... device="kitchen" id="...">transcript</channel>`. The session answers with
 `speak(device, text)`; TTS is ElevenLabs, streamed to the device. Speech on one device is queued, so
-answers never overlap.
+answers never overlap. The first ~250 ms of audio is held back before `audio_start` so the device doesn't
+underrun, and binary frames always hold whole 16-bit samples: ElevenLabs' chunks can end mid-sample, and a
+split sample can shift the device's byte stream so everything after it plays as static. Each answer logs
+`spoke on <device>: … bytes in … chunks (… odd), first byte … ms, longest gap … ms`; at 16 kHz a gap longer
+than the audio buffered on the device means an underrun.
 
 The device times out after ~30 s without audio. If no `speak` arrives within `VOICE_REPLY_TIMEOUT`
 seconds (20) the device hears `VOICE_BUSY_TEXT`; with no session connected it hears

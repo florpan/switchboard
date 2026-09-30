@@ -17,9 +17,15 @@ is built and tested locally, not yet deployed. Open work in priority order.
 
 - **Discord: message a person, not a channel.** `reply` needs a `chat_id`, so the person has to write first;
   good enough for now. A tool that takes a Discord user id (from users.json) and opens the DM would remove that.
-- **Speaker firmware.** `firmware/` builds both boards. The Korvo-1 build now includes the playback ring buffer,
-  which has only been tested on the Waveshare; try it when a Korvo is reflashed anyway. The Korvo case model goes
-  into `firmware/` once it's finished.
+- **Speaker firmware.** `firmware/` builds both boards. The Korvo case model goes into `firmware/` once it's
+  finished. To do at the next reflash (not before; firmware changes are only worth it when they can be tested):
+  - Flash the Korvo with the current build: it gets the playback ring buffer, which has only been tested on the
+    Waveshare.
+  - Keep whole samples in `playback_task` (`main/main.c`): `xStreamBufferReceive` can return an odd byte count
+    when the task catches up with the network, and the Waveshare `bsp_audio_play` does `length / 2`, dropping
+    the odd byte. Every later read then starts mid-sample, which plays as static until another odd read. Round
+    `got` down to even and keep the leftover byte for the next read. The daemon only sends whole-sample frames
+    now, so this is belt and braces.
 
 ## Watching, no action
 
@@ -29,4 +35,10 @@ is built and tested locally, not yet deployed. Open work in priority order.
   dropped until a restart (2026-09-28/29). The nightly job now sends `/exit` and the tmux loop starts a fresh
   session, and the daemon counts a session as connected only while its event stream is open. Check the morning
   after (2026-09-30) that channels answer; a day's session hasn't come near compaction.
+- **Static on the Korvo speaker.** 2026-09-30: three answers played as static from the start, all on the Korvo
+  (still on the old firmware without the ring buffer; the Waveshare may have had it unheard). The old gateway never
+  did this in months, with the same 8000-byte head start. Suspected cause: odd-sized ElevenLabs chunks forwarded
+  as-is, leaving a frame that ends mid-sample. The daemon now sends only whole samples and logs chunk stats per
+  answer (`spoke on …` in the voice log). If static comes back, check that line: odd chunks are now harmless, so
+  look at the longest gap and at the firmware.
 - **Claude Code updates** in the image are a `CLAUDE_CODE_VERSION` bump and a rebuild.
