@@ -39,13 +39,30 @@ seconds (20) the device hears `VOICE_BUSY_TEXT`; with no session connected it he
 | `POST /voice/ask {text, device?, timeout?}` | Typed question into the voice channel; returns `{response}` with the session's first `speak` (also spoken on `device` if given) |
 | `GET /api/voice/devices` | Connected speakers |
 
-Settings: `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `VOICE_LANGUAGE` (sv),
-`VOICE_REPLY_TIMEOUT`, `VOICE_BUSY_TEXT`, `VOICE_OFFLINE_TEXT`. Friendly speaker names:
+Settings: `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL` (TTS model), `VOICE_LANGUAGE` (sv),
+`VOICE_REPLY_TIMEOUT`, `VOICE_BUSY_TEXT`, `VOICE_OFFLINE_TEXT`.
+
+Speech recognition runs on ElevenLabs Scribe: a realtime stream while the speaker sends audio, and the REST
+endpoint as fallback when the stream never connected. Optional `ELEVENLABS_STT_*` settings; unset means the
+defaults below:
+
+| Setting | Default | Applies to |
+|---|---|---|
+| `ELEVENLABS_STT_MODEL` | `scribe_v2_realtime` | stream |
+| `ELEVENLABS_STT_FALLBACK_MODEL` | `scribe_v2` | REST |
+| `ELEVENLABS_STT_KEYTERMS` | | both. Comma-separated names and words the model should favour (people, rooms, devices, common commands). The stream takes the first 50; ElevenLabs charges extra when set |
+| `ELEVENLABS_STT_SECONDARY_LANGUAGES` | | stream. Comma-separated codes, e.g. `en`, allowed besides `VOICE_LANGUAGE` |
+| `ELEVENLABS_STT_NO_VERBATIM` | `false` | both. Drop fillers and false starts |
+| `ELEVENLABS_STT_FILTER_BACKGROUND_AUDIO` | `false` | stream |
+| `ELEVENLABS_STT_LOGGING` | `true` | stream. `false` asks ElevenLabs not to store the audio |
+
+Friendly speaker names:
 `config/voice-devices.json` `{ "devices": { "jarvis-aabbcc": "kitchen" } }`. Voice also offers the
 `say` action to other channels (job steps).
 
 Test without hardware: `bun tests/fake-device.ts "Vad är klockan?" [device-id] [listen-seconds]` speaks
-a sentence into `/voice` and saves the answer to `replies/*.wav`.
+a sentence into `/voice` and saves the answer to `replies/*.wav`. `bun tests/stt-config-check.ts` opens a
+realtime STT session and prints the settings ElevenLabs accepted.
 
 ## jobs
 
