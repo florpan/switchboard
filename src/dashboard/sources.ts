@@ -79,7 +79,7 @@ export async function fetchSource(s: Source, workspace: string, local: Local): P
 }
 
 /** ${NAME} from the daemon's environment (the workspace .env included). */
-function env(text: string) {
+export function env(text: string) {
   return text.replace(/\$\{(\w+)\}/g, (_, name) => {
     const value = process.env[name]
     if (value === undefined) throw new Error(`\${${name}} is not set`)

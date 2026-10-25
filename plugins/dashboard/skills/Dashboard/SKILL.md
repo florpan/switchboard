@@ -1,13 +1,15 @@
 ---
 name: Dashboard
-description: Change the switchboard dashboard (http://<gateway>:8090/dashboard) by editing config/dashboard.json in the workspace; pages, widgets (stat, list, table, sparkline, feed, status, gauge, bars, markdown, image), their data sources (built-in, script, http, loki, prometheus) and the theme (presets chiba, ice, deadchannel). USE WHEN adding, moving or removing something on the dashboard, showing new data on it, changing its colours or look, or when a dashboard widget shows an error.
+description: Change the switchboard dashboard (http://<gateway>:8090/dashboard) by editing config/dashboard.json in the workspace; pages, widgets (stat, list, table, sparkline, feed, status, gauge, bars, markdown, image, custom), their data sources (built-in, script, http, loki, prometheus), backends for custom widgets, and the theme (presets chiba, ice, deadchannel). USE WHEN adding, moving or removing something on the dashboard, showing new data on it, changing its colours or look, or when a dashboard widget shows an error.
 allowed-tools: Bash(bun ${CLAUDE_SKILL_DIR}/dashboard.ts *)
 ---
 
 # Dashboard
 
 The dashboard is one file: `config/dashboard.json` in the workspace. The daemon watches it and every open page
-updates within a second. Never write HTML or CSS; the widget types and their look are fixed by the product.
+updates within a second. The dashboard owns the look: header, grid, panels, theme. Use the built-in widget types
+and never write HTML or CSS for them. Only when none of them can show something (an interactive map, a graph
+explorer) write a custom widget (below); it draws inside its own box and never changes the page around it.
 
 Workflow:
 1. Read `config/dashboard.json` (if it doesn't exist the default page is showing; start from
@@ -67,6 +69,42 @@ Widget keys: `type`, `title`, `source`, `field` (dot path into the source's resu
 `color` is a theme colour name (primary, accent, ok, warn, bad, muted). `empty` sets the text for an empty
 list. Table columns named result/status/state/ok render done/error/pending/... as coloured tags; ISO times
 render as local times.
+
+## Custom widgets
+
+For what the fixed types can't show. An ES module that exports `mount(root, ctx)`:
+
+```js
+// dashboard/widgets/hello.js in the workspace
+export function mount(root, ctx) {            // root: a ShadowRoot; its CSS stays inside
+  root.innerHTML = '<style>p { color: var(--primary) }</style><p></p>'
+  const show = data => { root.querySelector('p').textContent = `${ctx.options.greeting}: ${data?.connected}` }
+  show(ctx.data)
+  return { update: show, unmount() {} }      // both optional; update gets new source data
+}
+```
+
+```json
+{ "type": "custom", "title": "Hello", "module": "widgets/hello.js", "source": "health", "options": { "greeting": "hej" }, "at": [0, 0, 4, 2] }
+```
+
+- `module`: a path under the workspace's `dashboard/` folder, or `"<backend>:<path>"` for code a service serves
+  itself (it then loads, and fetches relative to its own URL, through the backend).
+- `ctx`: `options` (from the widget), `data` (its `source`, optional, same sources as other widgets), `theme`
+  (the colours), `api(backend, path, params)` (GET JSON through a backend).
+- Style with the theme's CSS variables: `--bg`, `--bg-2`, `--panel`, `--line`, `--text`, `--muted`, `--dim`,
+  `--primary`, `--accent`, `--ok`, `--warn`, `--bad`, `--font`. They reach into the shadow root.
+- `"bare": true` drops the widget's title and padding. A page with `"fill": true` and one widget gives it the
+  whole window below the header.
+- After saving, `check` validates the widget; open the page to see the module load (its errors show in place).
+
+**Backends**: services the browser may reach through the daemon, so they need no CORS and secrets stay in the
+daemon. `GET /dashboard/backend/<name>/<path>` goes to `url + path` with the configured headers (`${NAME}` from
+the environment). GET only, never above `url`.
+
+```json
+"backends": { "knowledge": { "url": "http://host:8850/explorer/", "headers": { "Authorization": "Bearer ${KNOWLEDGE_TOKEN}" } } }
+```
 
 ## Theme
 

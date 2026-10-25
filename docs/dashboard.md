@@ -16,15 +16,18 @@ shows a default page with channels, jobs and job runs.
   data only: no script output beyond what the widget shows, no URLs with secrets, no queries.
 - When a source fails, the widget keeps its last data and shows the error under it.
 - Widget types are a fixed vocabulary rendered by the product. What an owner can change is layout,
-  sources and options.
+  sources and options. For what the vocabulary can't show there are [custom widgets](#custom-widgets): code
+  that draws inside its own widget box, while the dashboard keeps the header, grid, panels and theme.
 
 Code: `src/dashboard/`: `config.ts` (schema, validation, theme presets), `sources.ts` (source runners),
-`index.ts` (file watching, routes, SSE), `client.ts` + `page.html` (the browser side, no framework;
-`client.ts` is transpiled by Bun at startup).
+`index.ts` (file watching, routes, SSE, the backend proxy), `client.ts` + `page.html` (the browser side, no
+framework; `client.ts` is transpiled by Bun at startup, and mounts custom widgets).
 
 | Route | |
 |---|---|
 | `GET /dashboard` | The page. `#1` opens the second page |
+| `GET /dashboard/backend/<name>/<path>` | Proxy to a configured [backend](#backends) |
+| `GET /dashboard/widgets/<path>` | Files under the workspace's `dashboard/` folder (custom widget code and assets) |
 | `GET /api/dashboard` | The loaded config's errors and what every widget currently gets (after `field`) |
 | `POST /api/dashboard/check` | Validate `config/dashboard.json` and run each of its sources once; `{ok, errors}`. Only the file on disk, never a posted config: sources run commands and carry secrets |
 
@@ -45,7 +48,9 @@ Code: `src/dashboard/`: `config.ts` (schema, validation, theme presets), `source
 ```
 
 - `title`: header text; `//` renders as the accent separator.
-- `pages[]`: `title`, `columns` (12), `widgets`. With more than one page the header shows tabs.
+- `pages[]`: `title`, `columns` (12), `widgets`. With more than one page the header shows tabs. `fill: true`
+  makes a page of one widget that takes the whole window below the header.
+- `backends`: see [Backends](#backends).
 - A widget: `type`, `title`, `source`, optional `field`, `at`, plus options per type.
 - `at: [x, y, w, h]`: grid cells from the top left; a row is 64 px. Without `at` a widget takes 4 columns
   and 4 rows in reading order. On screens under 900 px wide, `at` is ignored and widgets stack in file
@@ -101,11 +106,56 @@ What each type expects from its data (after `field`), and its options.
 | `sparkline` | `[numbers]` or `{series: [numbers]}` | `show` (`sum`/`last`/`max` beside each series), `prefix`, `decimals` |
 | `markdown` | a string; or no source and `text` | `text` |
 | `image` | a URL; or no source and `src` | `src`, `every` (reload, seconds) |
+| `custom` | anything (optional `source`); see below | `module`, `options`, `bare` |
 
 - `color`: a theme colour name: `primary`, `accent`, `ok`, `warn`, `bad`, `muted`.
 - Tables format ISO times as `14:05` (today) or `tue 14:05`; columns named `result`, `status`, `state` or
   `ok` show values like `done`/`error`/`pending` as coloured tags.
 - `empty`: text shown when a list is empty (all list-like types).
+
+## Custom widgets
+
+A custom widget is an ES module that exports `mount(root, ctx)`:
+
+```js
+export function mount(root, ctx) {
+  root.innerHTML = '<style>p { color: var(--primary) }</style><p></p>'
+  const show = data => { root.querySelector('p').textContent = `${ctx.options.greeting}: ${data?.connected} sessions` }
+  show(ctx.data)
+  return { update: show, unmount() {} }
+}
+```
+
+```json
+{ "type": "custom", "title": "Hello", "module": "widgets/hello.js", "source": "health", "options": { "greeting": "hej" } }
+```
+
+- `root` is a ShadowRoot filling the widget body: the module's CSS stays inside, and the theme's CSS variables
+  (`--bg`, `--panel`, `--line`, `--text`, `--muted`, `--primary`, `--accent`, `--font`, ...) reach in, so a widget
+  follows the theme by using them.
+- `ctx`: `options` from the config, `data` from its `source` (optional; any source works, the result after
+  `field`), `theme` (the resolved colours) and `api(backend, path, params)`, a GET of JSON through a backend.
+- `mount` may return `{update(data), unmount()}`: `update` gets new source data, `unmount` runs when the page
+  changes or the config is reloaded. It may be async.
+- `module` is either a path under the workspace's `dashboard/` folder (`widgets/hello.js` is
+  `<workspace>/dashboard/widgets/hello.js`), or `"<backend>:<path>"`: code a service serves itself, loaded
+  through that backend. Such a module can fetch relative to `import.meta.url` and its requests go through the
+  proxy too. Module URLs carry the config's load time and the page load, so changed code is picked up.
+- `bare: true` drops the title and padding.
+
+The example workspace has one in `workspace.example/dashboard/widgets/hello.js`.
+
+## Backends
+
+```json
+"backends": { "knowledge": { "url": "http://192.168.1.20:8850/explorer/", "headers": { "Authorization": "Bearer ${KNOWLEDGE_TOKEN}" } } }
+```
+
+`GET /dashboard/backend/knowledge/graph` fetches `http://192.168.1.20:8850/explorer/graph` (query string kept)
+with the configured headers, `${NAME}` filled from the daemon's environment. The browser talks to the dashboard
+only: no CORS on the service, and its secrets never reach the page. GET only, no `..` above the URL; the
+browser's `Accept`, `Accept-Encoding` and cache validators are passed on, and the response's type, encoding,
+length and cache headers come back unchanged (gzip passes through).
 
 ## Theme
 

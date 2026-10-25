@@ -1,11 +1,19 @@
 // Dashboard at /dashboard: widgets from config/dashboard.json, fed by sources the daemon runs. The file is
 // watched; open pages get the new layout and data over SSE. A broken file keeps the last good config and
 // the page shows the error, so whoever edited it sees the mistake.
-import { existsSync, readFileSync, watch } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, readFileSync, statSync, watch } from 'node:fs'
+import { resolve, sep } from 'node:path'
 import type { RouteHandler } from '../core/channel'
-import { resolveTheme, validate, type Config, type Source } from './config'
-import { fetchSource, sourceKey, Sources } from './sources'
+import { MODULE, resolveTheme, validate, type Config, type Source, type Widget } from './config'
+import { env, fetchSource, sourceKey, Sources } from './sources'
+
+// What a backend may send back to the browser, and what the browser may pass on to it.
+const PASS_BACK = ['content-type', 'content-encoding', 'content-length', 'etag', 'last-modified', 'cache-control']
+const PASS_ON = ['accept', 'accept-encoding', 'if-none-match', 'if-modified-since']
+const STATIC_TYPES: Record<string, string> = {
+  js: 'text/javascript', mjs: 'text/javascript', css: 'text/css', json: 'application/json', svg: 'image/svg+xml',
+  png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp', html: 'text/html; charset=utf-8', wasm: 'application/wasm',
+}
 
 // Used until the workspace has its own config/dashboard.json.
 const FALLBACK: Config = {
@@ -26,6 +34,7 @@ export function dashboard(opts: { configDir: string; workspace: string; local: (
   const clients = new Set<ReadableStreamDefaultController<Uint8Array>>()
   const encoder = new TextEncoder()
   let config = FALLBACK
+  let loadedAt = Date.now() // module URLs carry it, so a config change reloads custom widgets' code
   let fileError: string | undefined
   let widgetErrors: string[] = []
 
@@ -50,6 +59,7 @@ export function dashboard(opts: { configDir: string; workspace: string; local: (
     const used: Source[] = ['health']
     for (const page of config.pages) for (const w of page.widgets) if (w.source && !w.error) used.push(w.source)
     sources.use(used)
+    loadedAt = Date.now()
     send('config', view())
     if (clients.size) sources.tick()
   }
@@ -63,9 +73,60 @@ export function dashboard(opts: { configDir: string; workspace: string; local: (
       pages: config.pages.map(p => ({
         title: p.title,
         columns: p.columns ?? 12,
-        widgets: p.widgets.map(({ source, ...w }) => ({ ...w, key: source === undefined ? undefined : sourceKey(source) })),
+        fill: p.fill === true,
+        widgets: p.widgets.map(({ source, ...w }) => ({
+          ...w,
+          key: source === undefined ? undefined : sourceKey(source),
+          moduleUrl: w.type === 'custom' && !w.error ? moduleUrl(w) : undefined,
+        })),
       })),
     }
+  }
+
+  /** "knowledge:widget.js" -> /dashboard/backend/knowledge/widget.js; "widgets/x.js" -> /dashboard/widgets/widgets/x.js */
+  function moduleUrl(w: Widget) {
+    const [, backend, path] = MODULE.exec(String(w.module))!
+    return `${backend ? `/dashboard/backend/${backend}/${path}` : `/dashboard/widgets/${path}`}?v=${loadedAt}`
+  }
+
+  // GET only, to a configured backend, never above its URL. Headers from the config (secrets via ${NAME}) are
+  // added here, so the browser never sees them; responses are passed through as they are (gzip included).
+  async function proxy(req: Request, name: string, rest: string) {
+    const backend = config.backends?.[name]
+    if (!backend) return Response.json({ error: `no backend "${name}" in dashboard.json` }, { status: 404 })
+    if (rest.split('/').some(part => part === '..')) return Response.json({ error: 'no ".." in backend paths' }, { status: 400 })
+    const headers: Record<string, string> = {}
+    try {
+      for (const [k, v] of Object.entries(backend.headers ?? {})) headers[k] = env(v)
+    } catch (err) {
+      return Response.json({ error: `backend ${name}: ${(err as Error).message}` }, { status: 502 })
+    }
+    for (const h of PASS_ON) {
+      const v = req.headers.get(h)
+      if (v) headers[h] = v
+    }
+    const target = backend.url.replace(/\/?$/, '/') + rest + new URL(req.url).search
+    try {
+      const res = await fetch(target, { headers, redirect: 'manual', decompress: false, signal: AbortSignal.timeout(120_000) } as RequestInit)
+      const out = new Headers()
+      for (const h of PASS_BACK) {
+        const v = res.headers.get(h)
+        if (v) out.set(h, v)
+      }
+      return new Response(res.body, { status: res.status, headers: out })
+    } catch (err) {
+      return Response.json({ error: `backend ${name}: ${(err as Error).message}` }, { status: 502 })
+    }
+  }
+
+  // The workspace's own widget code and assets: <workspace>/dashboard/<path>.
+  const widgetDir = resolve(opts.workspace, 'dashboard')
+  function widgetFile(rest: string) {
+    const file = resolve(widgetDir, rest)
+    const type = STATIC_TYPES[file.split('.').pop()?.toLowerCase() ?? '']
+    if (!file.startsWith(widgetDir + sep) || !type || !existsSync(file) || !statSync(file).isFile())
+      return new Response('not found', { status: 404 })
+    return new Response(Bun.file(file), { headers: { 'content-type': type, 'cache-control': 'no-cache' } })
   }
 
   function send(event: string, data: unknown) {
@@ -85,6 +146,8 @@ export function dashboard(opts: { configDir: string; workspace: string; local: (
 
   const routes: Record<string, RouteHandler> = {
     'GET /dashboard': () => new Response(page, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' } }),
+    'GET /dashboard/backend/:name/*': (req, params) => proxy(req, params.name!, params['*'] ?? ''),
+    'GET /dashboard/widgets/*': (_, params) => widgetFile(params['*'] ?? ''),
     'GET /dashboard/client.js': () => new Response(client, { headers: { 'content-type': 'text/javascript', 'cache-control': 'no-cache' } }),
     'GET /dashboard/events': req => {
       let self: ReadableStreamDefaultController<Uint8Array>

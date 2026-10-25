@@ -69,13 +69,19 @@ export function serve(opts: {
   return server
 }
 
+// A path segment ':name' captures one segment; a final '*' captures the rest (params['*'], may be empty).
 function match(route: Route, method: string, path: string) {
   if (route.method !== method) return null
   const parts = path.split('/')
-  if (parts.length !== route.parts.length) return null
+  const rest = route.parts.at(-1) === '*'
+  if (rest ? parts.length < route.parts.length - 1 : parts.length !== route.parts.length) return null
   const params: Record<string, string> = {}
   for (let i = 0; i < parts.length; i++) {
     const want = route.parts[i]!
+    if (rest && i === route.parts.length - 1) {
+      params['*'] = parts.slice(i).map(decodeURIComponent).join('/')
+      break
+    }
     if (want.startsWith(':')) params[want.slice(1)] = decodeURIComponent(parts[i]!)
     else if (want !== parts[i]) return null
   }

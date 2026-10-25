@@ -152,6 +152,15 @@ tr:hover td { background: color-mix(in srgb, var(--primary) 6%, transparent); }
 .t-image .body { display: flex; align-items: center; justify-content: center; }
 .t-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
+/* custom widgets draw in a shadow root that fills the body; "bare" drops the title and padding */
+.t-custom .body { position: relative; overflow: hidden; }
+.t-custom .custom { position: absolute; inset: 0; }
+.w.bare { padding: 0; }
+.w.bare > h2 { display: none; }
+/* a "fill" page: one widget, the whole window below the header */
+main.fill { display: block; max-width: none; padding: 12px; }
+main.fill > .w { height: 100%; }
+
 .err { border-color: color-mix(in srgb, var(--bad) 60%, transparent); }
 .err::before, .err::after { border-color: var(--bad); }
 .err h2 { color: var(--bad); }

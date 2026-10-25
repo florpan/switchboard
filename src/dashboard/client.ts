@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 // Browser side of /dashboard. Gets the layout and widget data over SSE and renders the fixed widget
-// vocabulary. Transpiled by the daemon at startup; no imports, no framework.
+// vocabulary, plus custom widgets: ES modules loaded at runtime that draw inside their own shadow root.
+// Transpiled by the daemon at startup; no imports, no framework.
 
 type Result = { data?: unknown; error?: string; at?: string }
 type Widget = { type: string; title?: string; key?: string; field?: string; at?: number[]; error?: string; [k: string]: any }
@@ -8,8 +9,11 @@ type View = {
   title: string
   error?: string
   theme: { vars: Record<string, string>; effects: Record<string, boolean> }
-  pages: { title: string; columns: number; widgets: Widget[] }[]
+  pages: { title: string; columns: number; fill?: boolean; widgets: Widget[] }[]
 }
+
+/** What a custom widget's module returns from mount(); both optional. */
+type Handle = { update?: (data: unknown) => void; unmount?: () => void }
 
 let view: View | undefined
 const results: Record<string, Result> = {}
@@ -69,7 +73,9 @@ function render() {
       : ''
 
   const grid = $('grid')
+  unmountAll()
   grid.style.setProperty('--cols', String(page.columns))
+  grid.classList.toggle('fill', !!page.fill)
   grid.innerHTML = ''
   $('banner').innerHTML = ''
   if (view.error) {
@@ -78,17 +84,80 @@ function render() {
     $('banner').append(banner)
   }
   page.widgets.forEach((w, i) => {
-    const el = section(`w t-${w.type}`, w.title ?? '', hint(w.key))
+    const el = section(`w t-${w.type}${w.bare ? ' bare' : ''}`, w.title ?? '', hint(w.key))
     el.dataset.page = String(index)
     el.dataset.index = String(i)
     if (w.key) el.dataset.key = w.key
     const [x, y, cw, ch] = w.at ?? []
-    el.style.gridColumn = w.at ? `${x! + 1} / span ${cw}` : `span ${Math.min(4, page.columns)}`
-    el.style.gridRow = w.at ? `${y! + 1} / span ${ch}` : 'span 4'
+    if (!page.fill) {
+      el.style.gridColumn = w.at ? `${x! + 1} / span ${cw}` : `span ${Math.min(4, page.columns)}`
+      el.style.gridRow = w.at ? `${y! + 1} / span ${ch}` : 'span 4'
+    }
     grid.append(el)
     fill(el, w)
   })
+  fitFill()
   session()
+}
+
+// A fill page's widget takes the window below the header.
+function fitFill() {
+  const grid = $('grid')
+  if (grid.classList.contains('fill')) grid.style.height = `${window.innerHeight - document.querySelector('header')!.offsetHeight}px`
+  else grid.style.height = ''
+}
+window.addEventListener('resize', fitFill)
+
+// --- custom widgets -------------------------------------------------------------------------
+// The module exports mount(root, ctx): root is a ShadowRoot (its CSS stays inside; the theme's CSS variables
+// --bg, --panel, --primary, ... reach in), ctx = { options, data, theme, api }. It may return { update, unmount }.
+// api(backend, path, params) fetches JSON through the daemon's proxy, so backends need no CORS and keep secrets.
+
+const mounted = new Map<HTMLElement, Promise<Handle | undefined>>()
+// moduleUrl carries the config's version; this adds one per page load, so a module its backend updated is fetched
+// again (browsers keep scripts in a memory cache by URL). Its own imports are cached the normal way.
+const pageLoad = Date.now()
+
+function unmountAll() {
+  for (const handle of mounted.values()) handle.then(h => h?.unmount?.()).catch(() => {})
+  mounted.clear()
+}
+
+async function api(backend: string, path: string, params: Record<string, string | number> = {}) {
+  const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString()
+  const res = await fetch(`/dashboard/backend/${encodeURIComponent(backend)}/${path}${query ? `?${query}` : ''}`)
+  if (!res.ok) throw new Error(`${backend}/${path}: ${res.status} ${(await res.text()).slice(0, 200)}`)
+  return res.json()
+}
+
+function custom(el: HTMLElement, w: Widget, result: Result) {
+  const body = el.querySelector<HTMLElement>('.body')!
+  const data = w.field ? pick(result.data, w.field) : result.data
+  let handle = mounted.get(el)
+  if (!handle) {
+    const host = document.createElement('div')
+    host.className = 'custom'
+    body.replaceChildren(host)
+    const root = host.attachShadow({ mode: 'open' })
+    handle = import(`${w.moduleUrl}&t=${pageLoad}`).then(
+      m => {
+        if (typeof m.mount !== 'function') throw new Error(`${w.module} has no mount() export`)
+        return m.mount(root, { options: w.options ?? {}, data, theme: view?.theme.vars ?? {}, api }) as Handle | undefined
+      },
+    )
+    handle.catch(err => {
+      el.classList.add('err')
+      body.innerHTML = `<pre>${esc(w.module)}: ${esc((err as Error).message)}</pre>`
+    })
+    mounted.set(el, handle)
+  } else if (data !== undefined) handle.then(h => h?.update?.(data)).catch(() => {})
+  el.querySelector('.stale')?.remove()
+  if (result.error) {
+    const stale = document.createElement('div')
+    stale.className = 'stale'
+    stale.textContent = result.error
+    el.append(stale)
+  }
 }
 
 function section(cls: string, title: string, note: string) {
@@ -113,8 +182,9 @@ function hint(key?: string) {
 
 function fill(el: HTMLElement, w: Widget) {
   const body = el.querySelector<HTMLElement>('.body')!
-  el.querySelector('.stale')?.remove()
   const result: Result = w.key ? results[w.key] ?? {} : { data: undefined }
+  if (w.type === 'custom' && !w.error) return custom(el, w, result)
+  el.querySelector('.stale')?.remove()
   const problem = w.error ?? (result.data === undefined ? result.error : undefined)
   el.classList.toggle('err', !!problem)
   if (problem) {
