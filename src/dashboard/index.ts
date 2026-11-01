@@ -94,7 +94,12 @@ export function dashboard(opts: { configDir: string; workspace: string; local: (
   async function proxy(req: Request, name: string, rest: string) {
     const backend = config.backends?.[name]
     if (!backend) return Response.json({ error: `no backend "${name}" in dashboard.json` }, { status: 404 })
-    if (rest.split('/').some(part => part === '..')) return Response.json({ error: 'no ".." in backend paths' }, { status: 400 })
+    // Resolved the way fetch will see it (backslashes, %2e and the like normalised), then checked.
+    const base = new URL(backend.url.replace(/\/?$/, '/'))
+    const target = new URL(rest, base)
+    if (target.origin !== base.origin || !target.pathname.startsWith(base.pathname))
+      return Response.json({ error: 'path outside the backend' }, { status: 400 })
+    target.search = new URL(req.url).search
     const headers: Record<string, string> = {}
     try {
       for (const [k, v] of Object.entries(backend.headers ?? {})) headers[k] = env(v)
@@ -105,7 +110,6 @@ export function dashboard(opts: { configDir: string; workspace: string; local: (
       const v = req.headers.get(h)
       if (v) headers[h] = v
     }
-    const target = backend.url.replace(/\/?$/, '/') + rest + new URL(req.url).search
     try {
       const res = await fetch(target, { headers, redirect: 'manual', decompress: false, signal: AbortSignal.timeout(120_000) } as RequestInit)
       const out = new Headers()
