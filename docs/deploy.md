@@ -51,13 +51,13 @@ The entrypoint:
 1. registers the image's plugin marketplace and installs the plugins the workspace enables,
 2. installs dependencies of workspace skills that have a `package.json`,
 3. runs the daemon (restarted if it exits; logs to `docker logs` and `state/gateway.log`),
-4. runs `claude --remote-control <GATEWAY_NAME> --channels ... $CLAUDE_ARGS` in tmux session `gateway`,
-   restarted if it exits.
+4. runs `claude --channels ... $CLAUDE_ARGS` in tmux session `gateway`, restarted if it exits.
 
-Container settings: `GATEWAY_CHANNELS` (voice,jobs,discord,email), `GATEWAY_NAME` (Remote Control session
-name, gateway), `CLAUDE_ARGS` (extra flags, e.g. `--dangerously-skip-permissions` so an unattended session
-never waits on a prompt; the container is the sandbox), `TZ`. Other settings can go in the compose
-`environment` or in the workspace `.env`; the process environment wins over `.env`.
+Container settings: `GATEWAY_CHANNELS` (voice,jobs,discord,email; also decides `--channels`), `CLAUDE_ARGS`
+(all other flags for the session, e.g. `--remote-control <name>` to reach it from the Claude app, and
+`--dangerously-skip-permissions` so an unattended session never waits on a prompt; the container is the
+sandbox; quote a name with spaces: `--remote-control 'My house'`), `TZ`. Other settings can go in the
+compose `environment` or in the workspace `.env`; the process environment wins over `.env`.
 
 `/mcp/*` is protected by `GATEWAY_TOKEN`. Without one in the compose `environment`, the entrypoint makes a
 random token at every start and hands it to both the daemon and the session. Set it yourself only if
@@ -100,7 +100,8 @@ also uses (they would invalidate each other's refreshed tokens).
 **Keep these out of the container environment:** `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_API_KEY` take
 precedence over the login and can't start Remote Control, and `DISABLE_TELEMETRY`, `DO_NOT_TRACK`,
 `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` switch off the feature flags Remote Control depends on. The session
-then runs, and channels work, but it never appears in the app. `GATEWAY_NAME` sets the name it appears under.
+then runs, and channels work, but it never appears in the app. `--remote-control <name>` in `CLAUDE_ARGS`
+sets the name it appears under.
 
 ```sh
 docker exec -it <container> tmux attach -t gateway

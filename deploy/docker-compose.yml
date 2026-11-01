@@ -9,8 +9,9 @@ services:
     environment:
       - TZ=Europe/Stockholm
       # - GATEWAY_CHANNELS=voice,jobs,discord,email
-      # Unattended session: skip permission prompts (the container is the sandbox).
-      - CLAUDE_ARGS=--dangerously-skip-permissions
+      # Flags for the Claude Code session (--channels is added from GATEWAY_CHANNELS). Remote Control under
+      # the name "gateway", and no permission prompts since the session runs unattended (the container is the sandbox).
+      - CLAUDE_ARGS=--remote-control gateway --dangerously-skip-permissions
     volumes:
       - ./workspace:/app/workspace      # your workspace repo: CLAUDE.md, config/, skills, notes, .env
       - ./home:/home/gateway            # Claude Code login + settings, git/ssh credentials
