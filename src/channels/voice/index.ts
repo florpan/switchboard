@@ -147,6 +147,8 @@ export function voice(gw: Gateway): Channel {
         if (!text) return Response.json({ error: 'text required' }, { status: 400 })
         if (!gw.connected('voice')) return Response.json({ error: 'no Claude session connected' }, { status: 503 })
         const target = device ?? `ask-${crypto.randomUUID().slice(0, 6)}`
+        // The answer is matched by device, so a second ask to the same one can't be told apart.
+        if (asks.has(target)) return Response.json({ ok: false, error: `already asking ${target}` }, { status: 409 })
         const answer = new Promise<string>(resolve => asks.set(target, resolve))
         await gw.push('voice', text, { device: target, id: crypto.randomUUID().slice(0, 8), input: 'text' })
         const response = await Promise.race([answer, Bun.sleep(timeout * 1000).then(() => null)])

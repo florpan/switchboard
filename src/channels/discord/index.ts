@@ -123,11 +123,13 @@ export function discord(gw: Gateway): Channel {
         run: async ({ chat_id, text, reply_to, files }: { chat_id: string; text: string; reply_to?: string; files?: string[] }) => {
           const target = await chat(chat_id)
           stopTyping(chat_id)
+          // Attachments only: one message without text still carries them.
           const parts = split(text)
+          if (!parts.length && files?.length) parts.push('')
           for (const [i, part] of parts.entries()) {
             const last = i === parts.length - 1
             await target.send({
-              content: part,
+              content: part || undefined,
               files: last ? files : undefined,
               reply: i === 0 && reply_to ? { messageReference: reply_to, failIfNotExists: false } : undefined,
             })

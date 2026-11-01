@@ -36,7 +36,7 @@ seconds (20) the device hears `VOICE_BUSY_TEXT`; with no session connected it he
 | HTTP | |
 |---|---|
 | `POST /voice/say {text, device?}` | Speak text directly, no session involved |
-| `POST /voice/ask {text, device?, timeout?}` | Typed question into the voice channel; returns `{response}` with the session's first `speak` (also spoken on `device` if given) |
+| `POST /voice/ask {text, device?, timeout?}` | Typed question into the voice channel; returns `{response}` with the session's first `speak` (also spoken on `device` if given); 409 while another ask to the same `device` is waiting |
 | `GET /api/voice/devices` | Connected speakers |
 
 Settings: `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL` (TTS model), `VOICE_LANGUAGE` (sv),

@@ -29,10 +29,15 @@ export function jobs(gw: Gateway): Channel {
     timers.clear()
     for (const job of file.jobs) {
       if (job.enabled === false) continue
-      if (job.schedule) timers.set(job.id, new Cron(job.schedule, () => void runner.run(job, 'cron')))
-      else if (job.at) {
-        if (new Date(job.at) <= new Date()) continue
-        timers.set(job.id, new Cron(new Date(job.at), () => runOnce(job)))
+      // A bad schedule skips that job only; croner throws on it, and this runs from the file watcher.
+      try {
+        if (job.schedule) timers.set(job.id, new Cron(job.schedule, () => void runner.run(job, 'cron')))
+        else if (job.at) {
+          if (new Date(job.at) <= new Date()) continue
+          timers.set(job.id, new Cron(new Date(job.at), () => runOnce(job)))
+        }
+      } catch (err) {
+        gw.log('jobs', `job ${job.id} skipped:`, (err as Error).message)
       }
     }
     gw.log('jobs', `${timers.size} active of ${file.jobs.length} jobs`)
@@ -98,7 +103,13 @@ export function jobs(gw: Gateway): Channel {
           required: ['id', 'steps'],
         },
         run: (job: Job) => {
-          file.jobs = [...file.jobs.filter(j => j.id !== job.id), { ...job, enabled: true }]
+          try {
+            if (job.schedule) new Cron(job.schedule).stop()
+            else if (job.at) new Cron(new Date(job.at)).stop()
+          } catch (err) {
+            return `not saved: ${(err as Error).message}`
+          }
+          file.jobs =[...file.jobs.filter(j => j.id !== job.id), { ...job, enabled: true }]
           file.save()
           reload()
           return `saved ${job.id}`

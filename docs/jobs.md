@@ -20,6 +20,9 @@ reloaded when it changes, and the session can manage them with the jobs channel'
 - `at`: an ISO time with offset; runs once, then the job is disabled.
 - Neither: the job only runs when triggered.
 
+A `schedule` or `at` that doesn't parse leaves that job inactive (logged); the others still run. `add_job`
+refuses it without saving.
+
 Any job can be triggered with `POST /api/jobs/:id/run` (returns 202 at once). The request body is
 available to the steps as `{input}` and `$JOB_INPUT`. This is how Home Assistant or any other system
 starts work: define a job without a schedule and point the webhook at it.
